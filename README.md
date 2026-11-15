@@ -14,7 +14,7 @@ The form posts JSON to `/api/enquiry/`. Controls stay disabled until hydration; 
 
 ## Architecture
 
-Content routes are prerendered; enquiry delivery runs on the server. Internal navigation uses Next Link. Collection images use Next Image, responsive sizes and local source photographs. Fonts are served locally with their licenses. Full motion stays enabled automatically without a toggle, as requested. The gallery intentionally has no zoom.
+Content routes are prerendered; enquiry delivery runs on the server. Internal navigation uses Next Link. Collection images use Next Image, responsive sizes and local source photographs. Fonts are served locally with their licenses. Full motion starts automatically without a toggle. The gallery has no zoom.
 
 `out/` is a generated HTML test snapshot, not a deployable backend. See DEPLOYMENT.md.
 

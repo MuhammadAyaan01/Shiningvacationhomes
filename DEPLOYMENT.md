@@ -8,8 +8,8 @@ The server supplies the POST endpoint, image optimizer and security headers. Enf
 
 The in-memory email limiter is best effort per process. Before public promotion add a shared deployment-layer rate limit or bot protection. Confirm retention, recipients and processor terms for the final privacy policy.
 
-## Sites hosting limitation
+## Optional Cloudflare deployment
 
-The previous hosted version was a static export. It cannot execute the new endpoint. The optional `build:worker` adapter was attempted on Windows and is blocked by an esbuild ancestor-directory permission error. It is not a validated deployment target. Do not deploy `out/` or claim the hosted site has the new backend. A successful Worker build and runtime validation are required before updating that deployment; alternatively deploy to a normal Next.js host.
+The optional `build:worker` adapter encounters an esbuild ancestor-directory permission error in the current Windows environment. Validate its build and runtime on the target platform before deployment. A static export cannot execute the enquiry endpoint; do not deploy `out/` as the working application. The standard Next.js server build is verified.
 
-Removing noindex does not change the hosting audience. Preserve existing owner-private access. Approved production content and public access remain separate launch decisions.
+Approve production content and verify the final host's access settings before launch.
