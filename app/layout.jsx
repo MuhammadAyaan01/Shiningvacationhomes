@@ -4,6 +4,7 @@ import '../src/experience.css';
 import '../src/chapter.css';
 import '../src/header.css';
 import '../src/focus.css';
+import '../src/enquiry.css';
 import {SiteProvider,Header,Footer,Motion} from '../components/site';
 import localFont from 'next/font/local';
 import {siteUrl} from '../src/seo.js';

@@ -20,3 +20,7 @@ Browser checks confirmed distinct animated transforms and delays on reload, six 
 The audit remediation described in VERIFICATION.md replaces static-only hosting, email drafts, forced full motion and blocked indexing. Use README.md and DEPLOYMENT.md for current setup. Gallery zoom remains removed. Historical browser checks above are not fresh checks of this release.
 
 Full motion is enabled again at the owner's request (14 November 2026); see the latest VERIFICATION.md entry.
+
+## Enquiry-led service update — 15 November 2026
+
+Accommodation is showcased through illustrative examples. Visitors share requirements and the team contacts them with suitable available options. The homepage form and contact page accept flexible travel plans and optional area/budget preferences. Catalogue search/filter/sort controls were removed; guide URLs and owner services remain accessible. See VERIFICATION.md for checks and remaining launch inputs.

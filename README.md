@@ -23,3 +23,7 @@ Content routes are prerendered; enquiry delivery runs on the server. Internal na
 Reference collections are not verified individual homes. Inventory, pricing, media rights, approved policies, delivery account and booking/payment contracts still need owner verification. No live booking or payment is implemented.
 
 Audit scores require fresh deployed measurements. Source fixes alone do not establish WCAG certification, field Core Web Vitals, inbox delivery or legal compliance.
+
+## Accommodation enquiries
+
+This website showcases accommodation Shining can help arrange; it does not publish live inventory. Visitors share requirements and the team follows up with suitable available options. The homepage and contact page use the same protected POST form. Exact dates are optional when an approximate travel plan or duration is supplied. Guests may add accommodation, area and AED budget preferences. Owner enquiries are separate. Configure delivery and complete an approved inbox test before public launch.

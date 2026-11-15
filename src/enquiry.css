@@ -1,0 +1,15 @@
+/* Requirements-led accommodation pages use the existing brand and spacing. */
+.section-description{max-width:700px;font-size:16px;line-height:1.8;color:var(--muted);margin:0 0 20px}
+.image-disclosure{font-size:13px;line-height:1.7;color:var(--muted);border-left:2px solid var(--blue);padding:8px 16px;margin:0 0 32px;max-width:780px}
+.stay-guide{display:inline-flex;align-items:center;gap:12px;font-size:13px;min-height:44px;text-decoration:underline;text-underline-offset:4px}
+.form-intro{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 24px}
+.form-fields{margin:0;padding:0;border:0;min-width:0}
+.field-hint{font-size:13px;line-height:1.6;color:var(--muted);margin:-8px 0 18px}
+.enquiry-details{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 0 22px;padding:0 2px}
+.enquiry-details summary{cursor:pointer;min-height:48px;padding:14px 0;font-size:13px;font-weight:500;line-height:1.6}
+.enquiry-details summary span{color:var(--muted);font-weight:400}.enquiry-details[open] summary{margin-bottom:10px}
+.form-purpose{font-size:13px;color:var(--blue);margin:0 0 22px}
+#plan-your-stay,#how-it-works{scroll-margin-top:32px}
+@media(min-width:761px) and (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.contact-grid{grid-template-columns:1fr;gap:32px}}
+@media(max-width:760px){.section-description{font-size:16px}.image-disclosure{margin-bottom:24px}.stay-guide{font-size:13px}.enquiry-details summary{font-size:14px}}
+@media(min-width:1001px){.contact-grid{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)}}

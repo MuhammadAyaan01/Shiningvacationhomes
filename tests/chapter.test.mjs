@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {chapters} from '../src/chapter-data.mjs';
 
-test('chapter discovery keeps search first and provides connected accessible tab panels and valid destinations',async()=>{
+test('chapter discovery connects accessible panels to requirements enquiries without inventory search',async()=>{
  const html=await readFile('out/index.html','utf8');
- assert.ok(html.indexOf('id="booking"')<html.indexOf('id="chapter-moments"'));
+ assert.doesNotMatch(html,/class="search-form"|Browse collections/);
  assert.ok(html.indexOf('id="chapter-moments"')<html.indexOf('id="property_types"'));
  for(const chapter of chapters){
   assert.ok(html.includes(`aria-controls="chapter-panel-${chapter.id}"`));
@@ -17,5 +17,5 @@ test('chapter discovery keeps search first and provides connected accessible tab
  const panels=html.match(/<div role="tabpanel"[^>]*>/g);
  assert.equal(panels.length,3);
  assert.equal(panels.filter(tag=>tag.includes('aria-hidden="true"')&&tag.includes('inert=""')).length,2);
- assert.match(html,/Reference collection photograph/);
+ assert.match(html,/Example accommodation photograph/);
 });

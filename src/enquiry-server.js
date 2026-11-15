@@ -10,7 +10,7 @@ const dateValid=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.par
 export function validateEnquiry(input,today=todayDubai()){
  const errors={},data={};
  if(!input||typeof input!=='object'||Array.isArray(input))return {errors:{form:'Invalid enquiry.'},data};
- for(const [key,max] of Object.entries({intent:10,name:100,email:254,phone:40,collection:80,arrival:10,departure:10,guests:2,area:120,bedrooms:10,message:3000,companyWebsite:200})){
+ for(const [key,max] of Object.entries({intent:10,name:100,email:254,phone:40,collection:80,arrival:10,departure:10,travelPlan:200,guests:2,preferredArea:120,budget:12,budgetBasis:10,area:120,bedrooms:10,message:3000,companyWebsite:200})){
   if(input[key]!==undefined&&typeof input[key]!=='string'){errors[key]='Use a text value.';continue;}
   data[key]=(input[key]||'').trim();if(data[key].length>max)errors[key]=`Use no more than ${max} characters.`;
  }
@@ -21,10 +21,15 @@ export function validateEnquiry(input,today=todayDubai()){
  if(data.companyWebsite)errors.form='Unable to accept this enquiry.';
  if(data.intent==='owner'){
   if(!['Studio','1','2','3','4','5','6'].includes(data.bedrooms))errors.bedrooms='Choose the number of bedrooms.';
-  for(const key of ['collection','arrival','departure','guests'])delete data[key];
+  for(const key of ['collection','arrival','departure','travelPlan','guests','preferredArea','budget','budgetBasis'])delete data[key];
  }else{
-  if(data.collection&&!collections.some(c=>c.slug===data.collection))errors.collection='Choose a listed collection.';
-  if(!/^(?:[1-9]|1[0-2])$/.test(data.guests))errors.guests='Choose between 1 and 12 guests.';
+  if(data.collection&&!collections.some(c=>c.slug===data.collection))errors.collection='Choose a listed accommodation style.';
+  if(data.guests&&!/^(?:[1-9]|1[0-2])$/.test(data.guests))errors.guests='Choose between 1 and 12 guests, or Not sure yet.';
+  if(!data.arrival&&!data.travelPlan)errors.travelPlan='Tell us your approximate dates or duration, or add an exact arrival date.';
+  if(data.budget){
+   if(!/^\d+(?:\.\d{1,2})?$/.test(data.budget)||Number(data.budget)<1||Number(data.budget)>100000000)errors.budget='Enter a budget between AED 1 and AED 100,000,000, with up to two decimal places.';
+   if(!['total','monthly'].includes(data.budgetBasis))errors.budgetBasis='Choose whether the budget is for the whole stay or each month.';
+  }else delete data.budgetBasis;
   for(const key of ['arrival','departure'])if(data[key]&&!dateValid(data[key]))errors[key]='Enter a valid date.';
   if(data.arrival&&data.arrival<today)errors.arrival='Choose today or a future date.';
   if(data.departure&&!data.arrival)errors.arrival='Choose a check-in date first.';
@@ -69,6 +74,6 @@ export async function handleEnquiry(request,env={},dependencies={}){
   });
   if(!result.ok)return response(result.status===429?429:502,{message:'The email service could not accept your enquiry. Please retry or contact the team directly.'});
   const receipt=await result.json();if(!receipt.id)throw new Error('No receipt');
-  return response(202,{message:'Your enquiry was accepted for email delivery. The team will confirm the options and availability separately.',reference:receipt.id});
+  return response(202,{message:data.intent==='owner'?'Your property enquiry has been submitted. Our team will contact you to discuss the details.':'Your requirements have been submitted. Our team will contact you to discuss suitable available options. No accommodation has been reserved.',reference:receipt.id});
  }catch{return response(502,{message:'Delivery could not be confirmed. Please retry or contact the team directly.'})}
 }

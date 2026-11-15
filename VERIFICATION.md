@@ -121,3 +121,13 @@ Final run: the production build and all 19 tests passed after the image/scroll r
 At the owner's request, full motion is enabled automatically across the site again. This supersedes the reduced-motion behavior in the audit remediation above. Restored JavaScript entrance effects, chapter/filter transitions, hero parallax and pointer movement, smooth back-to-top scrolling, and the full CSS animation path. No motion toggle or bar was added. The backend, routing, SEO and image improvements remain in place.
 
 Verification: production build and all 19 automated tests pass. HTTP checks confirm full-motion markup on the homepage, stays and property-management pages. No fresh browser animation timing check was available.
+
+## Enquiry-led accommodation journey — 15 November 2026
+
+The homepage now explains the accommodation-arrangement service and includes a requirements form. The primary action is Plan your stay. Accommodation examples link to a prefilled enquiry, with separate useful guides retained at the existing six URLs. Catalogue search, filtering, sorting and result counts were removed. The Dubai chapters, warm editorial design, local responsive images, gallery without zoom and full motion remain.
+
+Guest enquiries support approximate dates/duration, unsure guest counts, optional area, accommodation style and an optional AED budget with total/monthly basis. Exact dates and additional preferences use native disclosure controls. Property-owner enquiries remain a separate intent linked from the footer and form. Server validation and the plain-text email payload include the new requirements; guest-only fields are removed from owner payloads. The site makes no claim of live inventory, immediate reservation or guaranteed prices.
+
+Production build and 22 automated tests passed before final production HTTP verification. No browser automation is available for this pass; actual responsive rendering, keyboard interaction and form-prefill behavior still need manual review. No real email was sent. Delivery credentials, approved full privacy/booking policies, verified media permissions and operational response commitments remain launch inputs. No guaranteed response time, review, inventory count or income claim was added.
+
+Final verification for this update: production build and all 22 tests passed. Temporary production-server HTTP checks passed on all 14 content routes, security headers, protected POST boundaries, real 404, robots/sitemap and actual 256px/384px optimized WebP responses. Invalid budget data returned 422 before email delivery. The QA server was stopped afterward; ports 4173 and 4174 were left unused. No live email was sent and no browser interaction test was performed.

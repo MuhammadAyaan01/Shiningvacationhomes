@@ -36,3 +36,19 @@ test('basic per-process limiter bounds repeated enquiries',async()=>{
  for(let i=0;i<5;i++)assert.equal((await handleEnquiry(request(),env,deps)).status,202);
  assert.equal((await handleEnquiry(request(),env,deps)).status,429);assert.equal(calls,5);
 });
+
+test('flexible enquiries accept approximate plans and optional preferences without inventing availability',()=>{
+ const flexible={...valid,arrival:'',departure:'',guests:'',travelPlan:'Two weeks in December, dates flexible',preferredArea:'Near the Metro',budget:'12000.50',budgetBasis:'monthly'};
+ const result=validateEnquiry(flexible,'2030-04-01');assert.deepEqual(result.errors,{});assert.equal(result.data.budget,'12000.50');assert.equal(result.data.preferredArea,'Near the Metro');
+ assert.ok(validateEnquiry({...flexible,travelPlan:''},'2030-04-01').errors.travelPlan);
+ for(const budget of ['-1','0','0.50','100000001','NaN','1e3','100.123'])assert.ok(validateEnquiry({...flexible,budget},'2030-04-01').errors.budget,budget);
+ assert.ok(validateEnquiry({...flexible,budgetBasis:'nightly'},'2030-04-01').errors.budgetBasis);
+ assert.equal(validateEnquiry({...flexible,budget:''},'2030-04-01').data.budgetBasis,undefined);
+ const owner=validateEnquiry({...flexible,intent:'owner',bedrooms:'2',area:'Dubai'},'2030-04-01');assert.deepEqual(owner.errors,{});for(const key of ['travelPlan','guests','preferredArea','budget','budgetBasis'])assert.equal(owner.data[key],undefined,key);
+});
+
+test('delivery includes flexible requirements and does not promise a reservation',async()=>{
+ let delivered;const body={...valid,arrival:'',departure:'',travelPlan:'About one month',budget:'10000',budgetBasis:'monthly',preferredArea:'Dubai'};
+ const result=await handleEnquiry(request(body),env,{...dependencies(),fetch:async(url,init)=>{delivered=JSON.parse(init.body);return Response.json({id:'flexible-receipt'})}});
+ assert.equal(result.status,202);assert.match(delivered.text,/travelPlan: About one month/);assert.match(delivered.text,/budgetBasis: monthly/);assert.match(delivered.text,/preferredArea: Dubai/);assert.match((await result.json()).message,/No accommodation has been reserved/);
+});
