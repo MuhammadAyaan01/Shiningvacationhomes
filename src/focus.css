@@ -1,0 +1,6 @@
+/* One restrained keyboard focus treatment across the site. */
+:where(a,button,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:2px solid var(--focus-ring,var(--blue));
+  outline-offset:2px;
+}
+:where(footer,.chapter-company){--focus-ring:#fff}

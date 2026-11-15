@@ -1,0 +1,13 @@
+export default {
+  trailingSlash:true,
+  images:{imageSizes:[128,256,384],deviceSizes:[640,768,1024,1200,1600,2000],formats:['image/webp'],qualities:[75,85],...(process.env.BUILD_TARGET==='worker'?{loader:'custom',loaderFile:'./src/image-loader.js'}:{})},
+  poweredByHeader:false,
+  async headers(){return [{source:'/(.*)',headers:[
+   {key:'X-Content-Type-Options',value:'nosniff'},
+   {key:'Referrer-Policy',value:'strict-origin-when-cross-origin'},
+   {key:'X-Frame-Options',value:'DENY'},
+   {key:'Content-Security-Policy',value:"frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"},
+   {key:'Strict-Transport-Security',value:'max-age=31536000'},
+   {key:'Permissions-Policy',value:'camera=(), microphone=(), geolocation=()'}
+  ]}]},
+};

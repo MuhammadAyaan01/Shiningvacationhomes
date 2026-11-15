@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.open-next/
+.wrangler/
+dist/
+out/
+.sites-runtime/
+*.log
+.env
+.env.*
+!.env.example
