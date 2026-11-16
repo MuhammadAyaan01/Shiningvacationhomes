@@ -27,7 +27,7 @@ test('missing configuration fails closed without calling an email service',async
 test('accepted delivery uses validated text, configured recipient and provider idempotency',async()=>{
  let sent;const result=await handleEnquiry(request(),env,{...dependencies(),fetch:async(url,init)=>{sent={url,init};return Response.json({id:'receipt-123'})}});
  assert.equal(result.status,202);assert.equal((await result.json()).reference,'receipt-123');assert.equal(sent.url,'https://api.resend.com/emails');
- const body=JSON.parse(sent.init.body);assert.deepEqual(body.to,['team@example.com']);assert.equal(body.reply_to,'guest@example.com');assert.match(body.text,/name: Test Guest/);assert.equal(body.html,undefined);assert.equal(sent.init.headers['Idempotency-Key'],'enquiry-test-request-1234567890');
+ const body=JSON.parse(sent.init.body);assert.deepEqual(body.to,['team@example.com']);assert.equal(body.reply_to,'guest@example.com');assert.match(body.text,/Full name: Test Guest/);assert.match(body.html,/New stay enquiry/);assert.equal(sent.init.headers['Idempotency-Key'],'enquiry-test-request-1234567890');
 });
 test('provider rejection and network failure never claim successful delivery',async()=>{
  for(const fail of [async()=>new Response('',{status:500}),async()=>{throw Error('offline')}])assert.equal((await handleEnquiry(request(),env,{...dependencies(),fetch:fail})).status,502);
@@ -51,5 +51,5 @@ test('flexible enquiries accept approximate plans and optional preferences witho
 test('delivery includes flexible requirements and does not promise a reservation',async()=>{
  let delivered;const body={...valid,arrival:'',departure:'',travelPlan:'About one month',budget:'10000',budgetBasis:'monthly',preferredArea:'Dubai'};
  const result=await handleEnquiry(request(body),env,{...dependencies(),fetch:async(url,init)=>{delivered=JSON.parse(init.body);return Response.json({id:'flexible-receipt'})}});
- assert.equal(result.status,202);assert.match(delivered.text,/travelPlan: About one month/);assert.match(delivered.text,/budgetBasis: monthly/);assert.match(delivered.text,/preferredArea: Dubai/);assert.match((await result.json()).message,/No accommodation has been reserved/);
+ assert.equal(result.status,202);assert.match(delivered.text,/Travel plans: About one month/);assert.match(delivered.text,/per month/);assert.match(delivered.text,/Preferred area: Dubai/);assert.match((await result.json()).message,/No accommodation has been reserved/);
 });

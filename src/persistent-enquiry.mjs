@@ -18,7 +18,7 @@ export async function handlePersistentEnquiry(request,env,dependencies={}){
  const received=()=>reply(202,captured.status==='sent'?'Your requirements have been submitted. Our team will contact you. No accommodation has been reserved.':'Your requirements have been saved. Email delivery has not been confirmed. Please contact the team directly if your enquiry is urgent. No accommodation has been reserved.',captured.id);
  if(captured.existing)return received();
  try{
-  const result=await handleEnquiry(request,env,{...dependencies,parsed});
+  const result=await handleEnquiry(request,env,{...dependencies,parsed,enquiryReference:captured.id});
   captured.status=result.ok?'sent':'attention';
   await store.finish(captured.id,captured.status);
  }catch{captured.status='attention';}

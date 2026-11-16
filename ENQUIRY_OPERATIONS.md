@@ -45,3 +45,9 @@ The privacy page describes this technical behavior. The business must still conf
 ## Gmail connection diagnosis — 17 November 2026
 
 The OS resolver successfully resolves smtp.gmail.com. Gmail transport now uses that resolver while retaining TLS SNI and certificate validation for smtp.gmail.com; no IP address is hardcoded. Normal authenticated SMTP checks on both ports 465 and 587 were denied with EACCES before login in this execution environment. Credentials have not been rejected or verified. Run npm run check:email from an ordinary user terminal or the deployment host with approved SMTP access. No message is sent by this command. Do not disable TLS or regenerate passwords to address a network access denial.
+
+## Enquiry email format
+
+Guest, monthly-stay and owner notifications use the shared branded HTML template with inline styles and presentation tables, alongside a plain-text alternative. Form values are escaped in HTML; notes retain line breaks, accommodation names and dates are readable, blank optional rows are omitted, and the Reply action targets the enquirer. Gmail and Resend use the same content. The email reference matches the saved website enquiry reference. No remote fonts, tracking images or external assets are required.
+
+A user-confirmed local Gmail inbox receipt was supplied on 17 November 2026. The revised HTML formatting is covered by composition and escaping tests; a fresh Gmail inbox rendering check still requires a new enquiry after rebuilding/restarting the normal local server.

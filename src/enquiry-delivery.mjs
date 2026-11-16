@@ -55,7 +55,7 @@ export async function sendGmailEnquiry(env,message,createTransport){
  try{
   const sending=transport.sendMail({
    from:{name:'Shining Vacation Homes',address:env.SMTP_USER.trim()},
-   to:deliveryRecipients(env),replyTo:message.replyTo,subject:message.subject,text:message.text,
+   to:deliveryRecipients(env),replyTo:message.replyTo,subject:message.subject,text:message.text,html:message.html,
    messageId:`<enquiry-${message.requestId}@${env.SMTP_USER.trim().split('@')[1]}>`
   });
   const timeout=new Promise((_,reject)=>{deadline=setTimeout(()=>{transport.close();reject(new Error('SMTP deadline exceeded'));},20000);deadline.unref?.();});

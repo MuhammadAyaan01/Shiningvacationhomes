@@ -37,3 +37,9 @@ Use `npm run check:release` to validate the deployment origin and delivery setti
 ## Persistent enquiries
 
 The live endpoint encrypts and saves validated enquiries before email delivery. Localhost uses private SQLite storage; Vercel requires managed PostgreSQL via ENQUIRY_DATABASE_URL and a stable ENQUIRY_DATA_KEY (64 hex characters). A Node server can instead use an absolute persistent ENQUIRY_STORAGE_DIR. The release gate checks these requirements. Shared database transactions enforce per-email and overall sending budgets. See ENQUIRY_OPERATIONS.md for recovery, expiry, privacy deletion and required operator monitoring. No live database credentials or encryption keys belong in Git or public source archives.
+
+## Enquiry email format
+
+Guest, monthly-stay and owner notifications use the shared branded HTML template with inline styles and presentation tables, alongside a plain-text alternative. Form values are escaped in HTML; notes retain line breaks, accommodation names and dates are readable, blank optional rows are omitted, and the Reply action targets the enquirer. Gmail and Resend use the same content. The email reference matches the saved website enquiry reference. No remote fonts, tracking images or external assets are required.
+
+A user-confirmed local Gmail inbox receipt was supplied on 17 November 2026. The revised HTML formatting is covered by composition and escaping tests; a fresh Gmail inbox rendering check still requires a new enquiry after rebuilding/restarting the normal local server.

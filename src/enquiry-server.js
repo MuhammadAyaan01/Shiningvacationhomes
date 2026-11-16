@@ -1,6 +1,7 @@
 import {collections} from './data.mjs';
 import {createHash} from 'node:crypto';
 import {deliveryIssues,deliveryProvider,sendGmailEnquiry} from './enquiry-delivery.mjs';
+import {enquiryEmail} from './enquiry-email.mjs';
 
 const emailPattern=/^[^\s@\r\n]+@[^\s@\r\n]+\.[^\s@\r\n]+$/;
 // shortcut: per-process limits reset on restart; use shared host protection before public promotion.
@@ -85,15 +86,15 @@ export async function handleEnquiry(request,env={},dependencies={}){
  const entry=store.get(key)||{start:now,count:0};
  if(entry.count>=5)return response(429,{message:'Please wait before sending another enquiry.'},{'Retry-After':'900'});
  entry.count++;store.set(key,entry);
- const text=['Shining Vacation Homes enquiry','',...Object.entries(data).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`),'','An enquiry is not a confirmed reservation.'].join('\n');
+ const {text,html}=enquiryEmail(data,{reference:dependencies.enquiryReference||requestId});
  const deliver=async()=>{try{
   const subject=`Shining Vacation Homes - ${data.intent==='owner'?'Property management':data.intent==='monthly'?'Monthly stay':'Stay'} enquiry`;
   let reference;
-  if(smtp)reference=await sendGmailEnquiry(env,{replyTo:data.email,subject,text,requestId},dependencies.createTransport);
+  if(smtp)reference=await sendGmailEnquiry(env,{replyTo:data.email,subject,text,html,requestId},dependencies.createTransport);
   else{
   const result=await (dependencies.fetch||fetch)('https://api.resend.com/emails',{
    method:'POST',signal:AbortSignal.timeout(10000),headers:{Authorization:`Bearer ${env.RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':`enquiry-${requestId}`},
-   body:JSON.stringify({from:env.ENQUIRY_FROM,to:env.ENQUIRY_TO.split(',').map(v=>v.trim()).filter(Boolean),reply_to:data.email,subject,text})
+   body:JSON.stringify({from:env.ENQUIRY_FROM,to:env.ENQUIRY_TO.split(',').map(v=>v.trim()).filter(Boolean),reply_to:data.email,subject,text,html})
   });
   if(!result.ok)return response(result.status===429?429:502,{message:'The email service could not accept your enquiry. Please retry or contact the team directly.'});
   const receipt=await result.json();if(!receipt.id)throw new Error('No receipt');

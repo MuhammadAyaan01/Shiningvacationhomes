@@ -8,7 +8,7 @@ const body={intent:'guest',name:'Test Guest',email:'guest@example.com',travelPla
 const request=(input=body)=>new Request('https://example.com/api/enquiry/',{method:'POST',headers:{Origin:'https://example.com','Content-Type':'application/json','Idempotency-Key':'gmail-test-123456789'},body:JSON.stringify(input)});
 const dependencies=()=>({limits:new Map(),smtpRequests:new Map()});
 
-test('Gmail uses authenticated sender, same-inbox default, TLS and private plain-text delivery',async()=>{
+test('Gmail uses authenticated sender, same-inbox default, TLS and matching HTML/plain-text delivery',async()=>{
  let options,message,closed=false;
  const result=await handleEnquiry(request(),env,{...dependencies(),createTransport:config=>{
   options=config;return {sendMail:async data=>{message=data;return {messageId:'smtp-reference',accepted:['sender@gmail.com'],rejected:[]}},close:()=>{closed=true}};
@@ -18,7 +18,7 @@ test('Gmail uses authenticated sender, same-inbox default, TLS and private plain
  assert.equal(options.auth.pass,'abcdefghijklmnop');assert.equal(options.logger,false);assert.equal(options.debug,false);
  assert.equal(options.disableFileAccess,true);assert.equal(options.disableUrlAccess,true);
  assert.equal(message.from.address,'sender@gmail.com');assert.deepEqual(message.to,['sender@gmail.com']);
- assert.equal(message.replyTo,'guest@example.com');assert.equal(message.html,undefined);assert.match(message.text,/travelPlan: One month/);
+ assert.equal(message.replyTo,'guest@example.com');assert.match(message.html,/New stay enquiry/);assert.match(message.text,/Travel plans: One month/);
  assert.equal(closed,true);assert.doesNotMatch(message.text,/abcdefghijklmnop/);
 });
 
