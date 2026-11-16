@@ -137,3 +137,9 @@ Final verification for this update: production build and all 22 tests passed. Te
 Both enquiry sections now use a shared sidebar with native CSS sticky positioning, 32px top clearance and containment by the form grid. Sticking is enabled only above 1000px and only when the entire sidebar fits within the viewport with 32px clearance at both ends. ResizeObserver and viewport resize checks handle text wrapping, font changes and shorter windows. Mobile and stacked tablet layouts scroll normally; no scroll-follow animation or fixed positioning was added.
 
 Production build and all 22 automated tests passed. HTTP checks confirm the updated sidebar markup on the homepage and Contact page. Browser automation was unavailable, so fresh visual scrolling checks were not performed.
+
+## Centre the sticky enquiry text — 16 November 2026
+
+The sticky inset now uses half the space remaining between viewport height and the measured sidebar height. This keeps the complete text block vertically centred while scrolling, with a minimum 32px clearance. Native sticky containment still stops the sidebar at the form section's bottom. The existing viewport-fit fallback and normal mobile/tablet scrolling remain. No transform or scroll-follow animation was added.
+
+Verification: production build and all 22 tests passed. Both enquiry pages return HTTP 200 on localhost. Fresh visual scrolling verification remains unavailable.

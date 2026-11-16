@@ -14,4 +14,4 @@
 @media(max-width:760px){.section-description{font-size:16px}.image-disclosure{margin-bottom:24px}.stay-guide{font-size:13px}.enquiry-details summary{font-size:14px}}
 @media(min-width:1001px){.contact-grid{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)}}
 .enquiry-sidebar{align-self:start;position:static}
-@media(min-width:1001px){.enquiry-sidebar[data-sticky]{position:sticky;top:32px}}
+@media(min-width:1001px){.enquiry-sidebar[data-sticky]{position:sticky;top:var(--sidebar-top,32px)}}

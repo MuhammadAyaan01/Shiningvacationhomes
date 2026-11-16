@@ -18,7 +18,11 @@ export function EnquirySidebar({children}){
  const sidebar=useRef(null);
  useLayoutEffect(()=>{
   const element=sidebar.current,desktop=matchMedia('(min-width:1001px)');
-  const update=()=>element.toggleAttribute('data-sticky',desktop.matches&&element.offsetHeight<=innerHeight-64);
+  const update=()=>{
+   const height=element.offsetHeight;
+   element.style.setProperty('--sidebar-top',`${Math.max(32,(innerHeight-height)/2)}px`);
+   element.toggleAttribute('data-sticky',desktop.matches&&height<=innerHeight-64);
+  };
   const observer=new ResizeObserver(update);observer.observe(element);
   window.addEventListener('resize',update,{passive:true});update();
   return()=>{observer.disconnect();window.removeEventListener('resize',update);};
