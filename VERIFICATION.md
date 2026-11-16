@@ -131,3 +131,9 @@ Guest enquiries support approximate dates/duration, unsure guest counts, optiona
 Production build and 22 automated tests passed before final production HTTP verification. No browser automation is available for this pass; actual responsive rendering, keyboard interaction and form-prefill behavior still need manual review. No real email was sent. Delivery credentials, approved full privacy/booking policies, verified media permissions and operational response commitments remain launch inputs. No guaranteed response time, review, inventory count or income claim was added.
 
 Final verification for this update: production build and all 22 tests passed. Temporary production-server HTTP checks passed on all 14 content routes, security headers, protected POST boundaries, real 404, robots/sitemap and actual 256px/384px optimized WebP responses. Invalid budget data returned 422 before email delivery. The QA server was stopped afterward; ports 4173 and 4174 were left unused. No live email was sent and no browser interaction test was performed.
+
+## Sticky enquiry sidebar — 16 November 2026
+
+Both enquiry sections now use a shared sidebar with native CSS sticky positioning, 32px top clearance and containment by the form grid. Sticking is enabled only above 1000px and only when the entire sidebar fits within the viewport with 32px clearance at both ends. ResizeObserver and viewport resize checks handle text wrapping, font changes and shorter windows. Mobile and stacked tablet layouts scroll normally; no scroll-follow animation or fixed positioning was added.
+
+Production build and all 22 automated tests passed. HTTP checks confirm the updated sidebar markup on the homepage and Contact page. Browser automation was unavailable, so fresh visual scrolling checks were not performed.

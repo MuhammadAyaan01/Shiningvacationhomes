@@ -14,6 +14,17 @@ const easing='cubic-bezier(.22,1,.36,1)';
 const photoSrc=p=>['studio-600x336.jpg','1BR-600x336.jpg','2BR-600x336.jpg','4BR-600x336.jpg','villa-600x336.jpg'].includes(p.image.split('/').at(-1))?'/media/'+p.image.split('/').at(-1):media+p.image;
 const animate=(element,frames,duration=600)=>element?.animate?.(frames,{duration,easing});
 function useSite(){return useContext(SiteContext)}
+export function EnquirySidebar({children}){
+ const sidebar=useRef(null);
+ useLayoutEffect(()=>{
+  const element=sidebar.current,desktop=matchMedia('(min-width:1001px)');
+  const update=()=>element.toggleAttribute('data-sticky',desktop.matches&&element.offsetHeight<=innerHeight-64);
+  const observer=new ResizeObserver(update);observer.observe(element);
+  window.addEventListener('resize',update,{passive:true});update();
+  return()=>{observer.disconnect();window.removeEventListener('resize',update);};
+ },[]);
+ return <aside ref={sidebar} className="enquiry-sidebar">{children}</aside>;
+}
 export function SiteProvider({children}){
  const [plan,setPlan]=useState({arrival:'',departure:'',guests:'1'});
  const [query,setQuery]=useState({});const [photo,setPhoto]=useState(null);

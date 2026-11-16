@@ -7,7 +7,7 @@ test('full motion stays enabled without a toggle and contact uses a protected PO
  assert.doesNotMatch(home,/class="motion-toggle"|class="preview-bar"/);
  assert.match(home,/Availability is confirmed on enquiry/);
  const contact=await readFile('out/contact/index.html','utf8');
- assert.ok(contact.indexOf('id="enquiry-form"')<contact.indexOf('<aside>'));
+ assert.ok(contact.indexOf('id="enquiry-form"')<contact.indexOf('<aside'));
  assert.ok(contact.includes('action="/api/enquiry/" method="post"'));
  assert.match(contact,/<fieldset class="form-fields" disabled="">/);
  assert.doesNotMatch(contact,/Prepare enquiry|Open email draft/);
