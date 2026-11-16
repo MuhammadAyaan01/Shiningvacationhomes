@@ -39,7 +39,7 @@ export function EnquiryForm(){
   const body=Object.fromEntries(new FormData(el));
   requestId.current ||= crypto.randomUUID();busy.current=true;setPending(true);setErrors({});setMessage('Sending your requirements.');
   try{
-   const response=await fetch('/api/enquiry/',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':requestId.current},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
+   const response=await fetch('/api/enquiry/',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':requestId.current},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
    const result=await response.json();setErrors(result.errors||{});setMessage(result.message+(result.reference?' Reference: '+result.reference:''));
    if(result.errors){if(['arrival','departure'].some(k=>result.errors[k]))el.querySelector('[data-exact-dates]').open=true;if(['collection','preferredArea','budget','budgetBasis'].some(k=>result.errors[k]))el.querySelector('[data-preferences]').open=true;}
    if(response.ok){el.reset();requestId.current=null;}

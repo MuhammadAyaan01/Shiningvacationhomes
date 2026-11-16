@@ -4,7 +4,10 @@ import {readFile} from 'node:fs/promises';
 import {staySummary} from '../src/experience.js';
 
 test('gallery keeps fitted photographs and navigation without zoom controls',async()=>{
- const html=await readFile('out/stays/index.html','utf8');
+ const html=await readFile('components/photo-dialog.jsx','utf8');
+ const shell=await readFile('components/site.jsx','utf8');
+ assert.match(shell,/dynamic\(\(\)=>import\('\.\/photo-dialog\.jsx'\)/);
+ assert.match(shell,/photo!==null&&<PhotoDialog/);
  assert.match(html,/aria-label="Close photo preview"/);
  assert.match(html,/aria-label="Previous collection photograph"/);
  assert.match(html,/aria-label="Next collection photograph"/);

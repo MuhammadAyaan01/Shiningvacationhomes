@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {releaseIssues} from '../src/release-config.mjs';
-const configured={ENQUIRY_PROVIDER:'resend',NEXT_PUBLIC_SITE_URL:'https://stay.example.com',ENQUIRY_ORIGIN:'https://stay.example.com',RESEND_API_KEY:'test-only-not-a-real-secret',ENQUIRY_FROM:'Shining <sender@example.com>',ENQUIRY_TO:'team@example.com'};
+const configured={ENQUIRY_DATABASE_URL:'postgresql://test:test@db.example.com/shining',ENQUIRY_DATA_KEY:'a'.repeat(64),ENQUIRY_PROVIDER:'resend',NEXT_PUBLIC_SITE_URL:'https://stay.example.com',ENQUIRY_ORIGIN:'https://stay.example.com',RESEND_API_KEY:'test-only-not-a-real-secret',ENQUIRY_FROM:'Shining <sender@example.com>',ENQUIRY_TO:'team@example.com'};
 test('production configuration requires delivery settings without exposing secret values',()=>{
  const missing=releaseIssues({});for(const key of Object.keys(configured).filter(key=>key!=='ENQUIRY_PROVIDER'))assert.ok(missing.some(issue=>issue.includes(key)),key);
  assert.deepEqual(releaseIssues(configured),[]);

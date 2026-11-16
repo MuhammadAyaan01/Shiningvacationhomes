@@ -1,3 +1,4 @@
+import {Footer} from '../components/footer.jsx';
 import '../src/style.css';
 import '../src/motion.css';
 import '../src/experience.css';
@@ -5,7 +6,7 @@ import '../src/chapter.css';
 import '../src/header.css';
 import '../src/focus.css';
 import '../src/enquiry.css';
-import {SiteProvider,Header,Footer,Motion} from '../components/site';
+import {SiteProvider,Header,Motion} from '../components/site';
 import localFont from 'next/font/local';
 import {siteUrl,organizationSchema} from '../src/seo.js';
 

@@ -1,6 +1,8 @@
 'use client';
 import {createContext,useContext,useEffect,useLayoutEffect,useRef,useState,useCallback,Suspense} from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+const PhotoDialog=dynamic(()=>import('./photo-dialog.jsx'),{ssr:false});
 import {usePathname,useSearchParams} from 'next/navigation';
 import {collections,faqs,media} from '../src/data.mjs';
 import {chapters} from '../src/chapter-data.mjs';
@@ -9,7 +11,7 @@ import {staySummary} from '../src/experience.js';
 
 const SiteContext=createContext(null);
 const keys=['arrival','departure','guests'];
-const nav=[['/stays/','Accommodation'],['/monthly-stays/','Monthly stays'],['/about/','About'],['/contact/','Contact']];
+import {navigation as nav} from '../src/navigation.mjs';
 const easing='cubic-bezier(.22,1,.36,1)';
 const photoSrc=p=>['studio-600x336.jpg','1BR-600x336.jpg','2BR-600x336.jpg','4BR-600x336.jpg','villa-600x336.jpg'].includes(p.image.split('/').at(-1))?'/media/'+p.image.split('/').at(-1):media+p.image;
 const animate=(element,frames,duration=600)=>element?.animate?.(frames,{duration,easing});
@@ -44,7 +46,7 @@ export function SiteProvider({children}){
   return url.pathname+url.search+url.hash;
  };
  const openPhoto=(slug,button)=>{opener.current=button;setPhoto(Math.max(0,collections.findIndex(p=>p.slug===slug)));};
- return <SiteContext.Provider value={{plan,setPlan,query,href,openPhoto}}><Suspense fallback={null}><PlanSync onNavigate={sync}/></Suspense>{children}<PhotoDialog index={photo} setIndex={setPhoto} opener={opener}/></SiteContext.Provider>;
+ return <SiteContext.Provider value={{plan,setPlan,query,href,openPhoto}}><Suspense fallback={null}><PlanSync onNavigate={sync}/></Suspense>{children}{photo!==null&&<PhotoDialog index={photo} setIndex={setPhoto} opener={opener} href={href}/>}</SiteContext.Provider>;
 }
 function PlanSync({onNavigate}){const path=usePathname(),params=useSearchParams(),search=params.toString();useEffect(()=>onNavigate(search),[path,search,onNavigate]);return null}
 export function ContextLink({href,...props}){const site=useSite(),target=site.href(href);return target.startsWith('/')&&!target.startsWith('//')?<Link href={target} {...props}/>:<a href={target} {...props}/>}
@@ -55,7 +57,6 @@ export function Header(){
  useEffect(()=>{const escape=e=>{if(e.key==='Escape'&&open){setOpen(false);menu.current?.focus();}};document.addEventListener('keydown',escape);return()=>document.removeEventListener('keydown',escape);},[open]);
  return <header ref={header} className="header wrap"><ContextLink className="brand" href="/" aria-label="Shining Vacation Homes home"><img src="/media/shining_logo_ink.svg" alt="Shining Vacation Homes" width="196" height="42"/></ContextLink><button ref={menu} className="menu-toggle" aria-label={open?'Close menu':'Open menu'} aria-expanded={open} aria-controls="main-nav" onClick={()=>setOpen(value=>!value)}><span className="menu-label">{open?'Close':'Menu'}</span><span className="menu-icon" aria-hidden="true"/></button><nav id="main-nav" className={open?'open':''} aria-label="Main navigation" aria-hidden={mobile?!open:undefined} inert={mobile&&!open} onClick={e=>{if(e.target.closest('a'))setOpen(false);}}>{nav.map(([url,label])=><ContextLink key={url} href={url} aria-current={path===url||path===url.slice(0,-1)?'page':undefined}>{label}</ContextLink>)}<ContextLink className="mobile-stay" href="/contact/">Plan your stay <span aria-hidden="true">↗</span></ContextLink></nav><ContextLink className="header-contact" href="/contact/">Plan your stay <span aria-hidden="true">↗</span></ContextLink></header>;
 }
-export function Footer(){return <footer><div className="wrap footer-top"><div><ContextLink className="footer-wordmark" href="/">A little more Dubai.<br/>A little more you.</ContextLink><p>Shining Vacation Homes<br/>Short &amp; mid-term stays · Dubai</p></div><div><p className="eyebrow">EXPLORE</p>{nav.map(([url,label])=><ContextLink key={url} href={url}>{label}</ContextLink>)}<ContextLink href="/property-management/">For property owners</ContextLink></div><div><p className="eyebrow">LET’S CONNECT</p><a href="mailto:info@shiningvacationhomes.com">info@shiningvacationhomes.com</a><a href="tel:+971555770688">+971 55 577 0688</a><a href="tel:+97145770384">+971 4 577 0384</a></div></div><p className="wrap preview-note">Accommodation arranged around your requirements. Availability is confirmed on enquiry; submitting a request does not reserve a home.</p><div className="wrap footer-bottom"><span>© {new Date().getFullYear()} Shining Vacation Homes</span><div><ContextLink href="/privacy-policy/">Privacy information</ContextLink><ContextLink href="/booking-terms/">Booking information</ContextLink></div><span>Dubai, UAE ↗</span></div></footer>}
 export function StayContext(){const {plan}=useSite();return <div className="context-summary">{plan.arrival||plan.departure?staySummary(plan.arrival,plan.departure,plan.guests):'Share your dates, guests and preferences. We will discuss suitable available options with you.'}</div>}
 export function Faq(){
  const [active,setActive]=useState(-1);const group=useRef(null);
@@ -70,24 +71,18 @@ export function ChapterStory(){
 export function PhotoButton({slug,label='View example photos'}){const {openPhoto}=useSite();return <button className="quick-view" type="button" aria-haspopup="dialog" aria-label={label+' — '+(collections.find(p=>p.slug===slug)?.name||'Dubai collection')} onClick={e=>openPhoto(slug,e.currentTarget)}>{label} ↗</button>}
 export function CollectionCard({slug,featured=false}){const p=collections.find(p=>p.slug===slug);return <article className={'stay-tile'+(featured?' feature':'')}><ContextLink className={'stay-card'+(featured?' feature':'')} href={'/contact/?collection='+p.slug}><div className="card-image"><CollectionImage sizes={featured?'(max-width:1000px) 100vw, 55vw':'(max-width:600px) 100vw, (max-width:1000px) 50vw, 33vw'} src={photoSrc(p)} alt={'Illustrative '+p.name.toLowerCase()+' accommodation photograph'} width="900" height="650" loading="lazy"/><span className="image-tag">Example photograph</span><span className="round-arrow" aria-hidden="true">↗</span></div><div className="card-copy"><span className="eyebrow">ACCOMMODATION STYLE</span><h3>{p.name}</h3><p>{p.short}</p><span className="card-bottom">Enquire about this option <span aria-hidden="true">↗</span></span></div></ContextLink><ContextLink className="stay-guide" href={'/stays/'+p.slug+'/'}>Explore {p.name.toLowerCase()} in Dubai <span aria-hidden="true">↗</span></ContextLink><PhotoButton slug={slug} label="View example"/></article>}
 export function AccommodationStyles(){return <><h2 className="visually-hidden">Accommodation styles</h2><div className="cards accommodation-styles" aria-label="Accommodation styles">{collections.map(p=><CollectionCard key={p.slug} slug={p.slug}/>)}</div></>}
-function PhotoDialog({index,setIndex,opener}){
- const dialog=useRef(null),image=useRef(null);const [status,setStatus]=useState('');const {href}=useSite();const item=collections[index??0];
- useEffect(()=>{const el=dialog.current;if(index!==null){if(!el.open)el.showModal();document.documentElement.classList.add('photo-open');setStatus('Loading photograph.');animate(image.current,[{opacity:.25},{opacity:1}],480);}else if(el.open)el.close();return()=>document.documentElement.classList.remove('photo-open');},[index]);
- const close=()=>{setIndex(null);opener.current?.focus();};const move=n=>setIndex((index+n+collections.length)%collections.length);
- return <dialog ref={dialog} className="photo-dialog" aria-labelledby="photo-title" onCancel={close} onClose={close} onClick={e=>{if(e.target===e.currentTarget)dialog.current.close()}} onKeyDown={e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();move(e.key==='ArrowRight'?1:-1);}}}><div className="photo-dialog-inner"><header className="photo-toolbar"><span>ACCOMMODATION INSPIRATION</span><button type="button" className="photo-close" aria-label="Close photo preview" onClick={()=>dialog.current.close()}>Close ×</button></header><div className="photo-stage" aria-busy={status==='Loading photograph.'}><CollectionImage sizes="100vw" width="2000" height="1121" ref={image} src={index===null?undefined:photoSrc(item)} alt={'Representative '+item.name.toLowerCase()+' collection photograph'} draggable={false} onLoad={()=>setStatus(`Example ${index+1} of ${collections.length}`)} onError={()=>setStatus('This photograph could not load. Try another collection or open its page.')}/></div><div className="photo-navigation"><button type="button" aria-label="Previous collection photograph" onClick={()=>move(-1)}>← Previous</button><button type="button" aria-label="Next collection photograph" onClick={()=>move(1)}>Next →</button></div><div className="photo-info"><div><p className="eyebrow">EXAMPLE PHOTOGRAPHY</p><h2 id="photo-title">{item.name}</h2><p className="photo-status" role="status">{status}</p><p className="subnote">These images illustrate accommodation styles. Our team shares actual available options after your enquiry.</p></div><div className="photo-actions"><Link className="button secondary" href={href('/stays/'+item.slug+'/')}>Read the style guide ↗</Link><Link className="button" href={href('/contact/?collection='+item.slug)}>Enquire about this option ↗</Link></div></div></div></dialog>;
-}
 export function Motion(){
  const path=usePathname();
  const progress=useRef(null),[back,setBack]=useState(false);
  useEffect(()=>{
-  const animations=[];const play=(el,frames,duration=760,delay=0)=>{const a=el?.animate?.(frames,{duration,delay,easing,fill:'backwards'});if(a)animations.push(a);};
-  const enter=(el,delay=0)=>play(el,[{opacity:0,transform:'translateY(44px)'},{opacity:1,transform:'translateY(0)'}],760,delay);
+  const animations=[];const play=(el,frames,duration=600,delay=0)=>{const a=el?.animate?.(frames,{duration,delay,easing,fill:'backwards'});if(a)animations.push(a);};
+  const enter=(el,delay=0)=>play(el,[{opacity:0,transform:'translateY(44px)'},{opacity:1,transform:'translateY(0)'}],600,delay);
   document.querySelectorAll('.hero-copy>*:not(h1),.page-intro>*:not(h1),.detail-heading>*:not(h1):not(.breadcrumb)').forEach((el,i)=>enter(el,Math.min(i*110,440)));
-  play(document.querySelector('.hero-visual'),[{clipPath:'inset(0 0 100% 0 round 8px)',transform:'translateY(32px)',opacity:.2},{clipPath:'inset(0 0 0 0 round 8px)',transform:'translateY(0)',opacity:1}],1150,80);
+  play(document.querySelector('.hero-visual'),[{clipPath:'inset(0 0 100% 0 round 8px)',transform:'translateY(32px)',opacity:.2},{clipPath:'inset(0 0 0 0 round 8px)',transform:'translateY(0)',opacity:1}],780,40);
   const observer=new IntersectionObserver(entries=>entries.filter(entry=>entry.isIntersecting).forEach((entry,i)=>{enter(entry.target,Math.min(i*90,270));observer.unobserve(entry.target);}),{threshold:.12,rootMargin:'0px 0px -24px 0px'});
   document.querySelectorAll('.section-title,.home-collection>.stay-tile,.collection-row,.slow-grid>*,.steps article,.owner-band>*,.faq-grid>*,.editorial>*,.help-strip,.contact-grid>*,.prose>*,.detail-photo,.detail-copy,.enquiry-panel,.cards>*,.chapter-reveal').forEach(el=>observer.observe(el));
   const hero=document.querySelector('.hero-visual');let frame=0;
-  const update=()=>{frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight;progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);setBack(y>550);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);};
+  const update=()=>{frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight;progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);setBack(previous=>previous===(y>550)?previous:y>550);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);};
   const scroll=()=>{if(!frame)frame=requestAnimationFrame(update)};
   const look=e=>{if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;const box=hero.getBoundingClientRect();hero?.style.setProperty('--look-x',`${((e.clientX-box.left)/box.width-.5)*14}px`);hero?.style.setProperty('--look-y',`${((e.clientY-box.top)/box.height-.5)*10}px`);};
   const leave=()=>{hero?.style.setProperty('--look-x','0px');hero?.style.setProperty('--look-y','0px')};

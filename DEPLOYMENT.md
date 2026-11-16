@@ -38,3 +38,7 @@ The Next.js server emits nosniff, frame protection, referrer/permissions policie
 ## Optional Cloudflare adapter
 
 The optional build:worker target remains unverified in this Windows environment because esbuild cannot resolve its configuration through a restricted ancestor directory. It is not the selected production deployment path. Do not publish the HTML test snapshot as a substitute for the server application.
+
+## Persistent enquiries
+
+The live endpoint encrypts and saves validated enquiries before email delivery. Localhost uses private SQLite storage; Vercel requires managed PostgreSQL via ENQUIRY_DATABASE_URL and a stable ENQUIRY_DATA_KEY (64 hex characters). A Node server can instead use an absolute persistent ENQUIRY_STORAGE_DIR. The release gate checks these requirements. Shared database transactions enforce per-email and overall sending budgets. See ENQUIRY_OPERATIONS.md for recovery, expiry, privacy deletion and required operator monitoring. No live database credentials or encryption keys belong in Git or public source archives.

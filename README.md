@@ -12,7 +12,7 @@ Copy `.env.example` to `.env.local`. For Gmail, set `ENQUIRY_PROVIDER=gmail`, `S
 
 Resend remains optional: set `ENQUIRY_PROVIDER=resend`, `RESEND_API_KEY`, `ENQUIRY_FROM` (a verified sender) and `ENQUIRY_TO`. Existing environments without ENQUIRY_PROVIDER continue to use Resend. Gmail uses TLS on smtp.gmail.com:465 and needs outbound SMTP access from the host. Google can impose sending limits or block sign-ins; this is intended for low-volume enquiries.
 
-The form posts JSON to `/api/enquiry/`. Controls stay disabled until hydration; without JavaScript, direct contact details remain available. Server validation, bounded request bodies, same-origin checks, a honeypot, Resend provider idempotency, per-process Gmail retry deduplication for 15 minutes, timeouts and a basic per-process limiter protect the endpoint. A 202 response means the provider accepted delivery, not confirmed inbox receipt or a reservation. Missing configuration returns 503 and explicitly reports that nothing was sent.
+The form posts JSON to `/api/enquiry/`. Controls stay disabled until hydration; without JavaScript, direct contact details remain available. Server validation, bounded request bodies, same-origin checks, a honeypot, Resend provider idempotency, per-process Gmail retry deduplication for 15 minutes, timeouts and a basic per-process limiter protect the endpoint. A 202 response means the enquiry was durably captured; its message distinguishes confirmed provider acceptance from unconfirmed email delivery. It never means inbox receipt or a reservation. Missing configuration returns 503 and explicitly reports that nothing was sent.
 
 ## Architecture
 
@@ -33,3 +33,7 @@ This website showcases accommodation Shining can help arrange; it does not publi
 ## Production commands
 
 Use `npm run check:release` to validate the deployment origin and delivery settings. `npm start` runs the Next.js server in the foreground using the host PORT (default 3000). `npm run preview` is the separate local background preview on port 4173. Vercel configuration runs the release check, build and tests before a deployment can succeed. See DEPLOYMENT.md for the required environment values and live verification.
+
+## Persistent enquiries
+
+The live endpoint encrypts and saves validated enquiries before email delivery. Localhost uses private SQLite storage; Vercel requires managed PostgreSQL via ENQUIRY_DATABASE_URL and a stable ENQUIRY_DATA_KEY (64 hex characters). A Node server can instead use an absolute persistent ENQUIRY_STORAGE_DIR. The release gate checks these requirements. Shared database transactions enforce per-email and overall sending budgets. See ENQUIRY_OPERATIONS.md for recovery, expiry, privacy deletion and required operator monitoring. No live database credentials or encryption keys belong in Git or public source archives.

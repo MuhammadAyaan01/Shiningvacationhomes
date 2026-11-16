@@ -12,6 +12,9 @@ if(issues.length){
 }else{
  const transport=nodemailer.createTransport(gmailTransportOptions(process.env));
  try{await transport.verify();console.log('Gmail SMTP connection and authentication passed. No email was sent; inbox delivery still needs a form test.');}
- catch{console.error('Gmail authentication or connection failed. Check the account, App Password, 2-Step Verification and SMTP access. No email was sent.');process.exitCode=1;}
+ catch(error){
+  const reason=error.code==='EDNS'?'DNS lookup for smtp.gmail.com failed before authentication.':error.code==='EAUTH'?'Google rejected authentication. Check the account, App Password and 2-Step Verification.':'The SMTP connection could not be verified. Check host network access and Google account settings.';
+  console.error(reason+' No email was sent.');process.exitCode=1;
+ }
  finally{transport.close();}
 }

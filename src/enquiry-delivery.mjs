@@ -27,13 +27,16 @@ export function gmailTransportOptions(env){
 
 export async function sendGmailEnquiry(env,message,createTransport){
  const transport=(createTransport||(await import('nodemailer')).default.createTransport)(gmailTransportOptions(env));
+ let deadline;
  try{
-  const result=await transport.sendMail({
+  const sending=transport.sendMail({
    from:{name:'Shining Vacation Homes',address:env.SMTP_USER.trim()},
    to:deliveryRecipients(env),replyTo:message.replyTo,subject:message.subject,text:message.text,
    messageId:`<enquiry-${message.requestId}@${env.SMTP_USER.trim().split('@')[1]}>`
   });
+  const timeout=new Promise((_,reject)=>{deadline=setTimeout(()=>{transport.close();reject(new Error('SMTP deadline exceeded'));},20000);deadline.unref?.();});
+  const result=await Promise.race([sending,timeout]);
   if(!result.messageId||result.rejected?.length||result.accepted?.length!==deliveryRecipients(env).length)throw new Error('SMTP acceptance not confirmed');
   return result.messageId;
- }finally{transport.close();}
+ }finally{clearTimeout(deadline);transport.close();}
 }

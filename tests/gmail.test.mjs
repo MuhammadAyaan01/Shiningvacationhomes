@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {handleEnquiry} from '../src/enquiry-server.js';
-import {deliveryIssues} from '../src/enquiry-delivery.mjs';
+import {deliveryIssues,sendGmailEnquiry} from '../src/enquiry-delivery.mjs';
 import {releaseIssues} from '../src/release-config.mjs';
 const env={ENQUIRY_PROVIDER:'gmail',SMTP_USER:'sender@gmail.com',SMTP_APP_PASSWORD:'abcd efgh ijkl mnop'};
 const body={intent:'guest',name:'Test Guest',email:'guest@example.com',travelPlan:'One month',message:'Please confirm options.'};
@@ -45,7 +45,15 @@ test('Gmail rejection and uncertain delivery return errors without disclosing cr
 
 test('Gmail release settings support a different recipient and require no Resend credentials',()=>{
  assert.deepEqual(deliveryIssues(env),[]);
- assert.deepEqual(releaseIssues({...env,NEXT_PUBLIC_SITE_URL:'https://example.com',ENQUIRY_ORIGIN:'https://example.com'}),[]);
+ assert.deepEqual(releaseIssues({...env,ENQUIRY_DATABASE_URL:'postgresql://test:test@db.example.com/shining',ENQUIRY_DATA_KEY:'a'.repeat(64),NEXT_PUBLIC_SITE_URL:'https://example.com',ENQUIRY_ORIGIN:'https://example.com'}),[]);
  assert.deepEqual(deliveryIssues({...env,ENQUIRY_TO:'team@example.com'}),[]);
  for(const bad of [{SMTP_USER:'bad\r\nBcc: x'},{SMTP_APP_PASSWORD:'regular-password'},{ENQUIRY_TO:'team@example.com,'},{ENQUIRY_PROVIDER:'unknown'}])assert.ok(deliveryIssues({...env,...bad}).length);
+});
+
+test('SMTP has a total deadline and closes a stalled connection',async context=>{
+ context.mock.timers.enable({apis:['setTimeout']});
+ let closed=false;
+ const pending=sendGmailEnquiry(env,{replyTo:'guest@example.com',subject:'Test',text:'Test',requestId:'deadline-test-123456'},()=>({sendMail:()=>new Promise(()=>{}),close:()=>{closed=true}}));
+ const rejection=assert.rejects(pending,/deadline exceeded/);
+ context.mock.timers.tick(20000);await rejection;assert.equal(closed,true);
 });

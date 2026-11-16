@@ -52,7 +52,7 @@ async function readBody(request){
  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
-export async function handleEnquiry(request,env={},dependencies={}){
+export async function readEnquiryRequest(request,env={},dependencies={}){
  if(request.method!=='POST')return response(405,{message:'Use POST.'},{Allow:'POST'});
  const url=new URL(request.url);
  const origin=request.headers.get('origin'),expected=env.ENQUIRY_ORIGIN||(request.headers.get('host')?`${url.protocol}//${request.headers.get('host')}`:url.origin);
@@ -63,6 +63,13 @@ export async function handleEnquiry(request,env={},dependencies={}){
  if(Object.keys(errors).length)return response(422,{message:'Please check the highlighted fields.',errors});
  const requestId=request.headers.get('idempotency-key')||'';
  if(!/^[a-zA-Z0-9_-]{16,80}$/.test(requestId))return response(400,{message:'Reload the form and try again.'});
+ return {data,requestId};
+}
+
+export async function handleEnquiry(request,env={},dependencies={}){
+ const parsed=dependencies.parsed||await readEnquiryRequest(request,env,dependencies);
+ if(parsed instanceof Response)return parsed;
+ const {data,requestId}=parsed;
  if(deliveryIssues(env).length)return response(503,{message:'Online enquiries are not configured yet. Please call or email the team. Your enquiry has not been sent.'});
  const smtp=deliveryProvider(env)==='gmail',requests=dependencies.smtpRequests||smtpRequests;
  const requestKey=`${data.email.toLowerCase()}:${requestId}`,fingerprint=createHash('sha256').update(JSON.stringify(data)).digest('hex');

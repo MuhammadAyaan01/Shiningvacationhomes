@@ -1,5 +1,5 @@
 /* Short, purposeful transitions; all layout space is reserved by the base styles. */
-.motion-word{animation:title-word-enter 950ms cubic-bezier(.22,1,.36,1) both}
+.motion-word{animation:title-word-enter 700ms cubic-bezier(.22,1,.36,1) both}
 @keyframes title-word-enter{from{transform:translateY(110%) rotate(5deg);opacity:0}to{transform:translateY(0) rotate(0);opacity:1}}
 .button,.filter,.collection-row,.round-arrow,.card-image img,.text-link>span,.button>span,.header-contact>span{transition:transform 220ms cubic-bezier(.22,1,.36,1),background-color 180ms,color 180ms,box-shadow 220ms}
 .header nav a{position:relative}
