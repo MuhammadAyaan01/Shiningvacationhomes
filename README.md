@@ -1,10 +1,10 @@
 # Shining Vacation Homes
 
-Next.js App Router and React with shared CSS and the approved warm editorial design. Node.js 22+ is required.
+Next.js App Router and React with shared CSS and the approved warm editorial design. Node.js 26.x is the verified production target.
 
 ## Run locally
 
-Run `npm ci`, `npm run build`, `npm test`, then `npm start`. The production Next.js server runs at http://127.0.0.1:4173/. For hot reload, use `npm run dev` instead. Stop another server on that port first.
+Run `npm ci`, `npm run build`, `npm test`, then `npm run preview`. The local production preview runs at http://127.0.0.1:4173/. For hot reload, use `npm run dev` instead. Stop another server on that port first.
 
 ## Enquiries
 
@@ -20,10 +20,14 @@ Content routes are prerendered; enquiry delivery runs on the server. Internal na
 
 ## Remaining launch inputs
 
-Reference collections are not verified individual homes. Inventory, pricing, media rights, approved policies, delivery account and booking/payment contracts still need owner verification. No live booking or payment is implemented.
+Accommodation photographs are illustrative. Actual options and prices are discussed after enquiry. Media rights, final policies, the delivery account and applicable provider/confirmation terms need owner verification. No live booking or payment is implemented.
 
 Audit scores require fresh deployed measurements. Source fixes alone do not establish WCAG certification, field Core Web Vitals, inbox delivery or legal compliance.
 
 ## Accommodation enquiries
 
 This website showcases accommodation Shining can help arrange; it does not publish live inventory. Visitors share requirements and the team follows up with suitable available options. The homepage and contact page use the same protected POST form. Exact dates are optional when an approximate travel plan or duration is supplied. Guests may add accommodation, area and AED budget preferences. Owner enquiries are separate. Configure delivery and complete an approved inbox test before public launch.
+
+## Production commands
+
+Use `npm run check:release` to validate the deployment origin and delivery settings. `npm start` runs the Next.js server in the foreground using the host PORT (default 3000). `npm run preview` is the separate local background preview on port 4173. Vercel configuration runs the release check, build and tests before a deployment can succeed. See DEPLOYMENT.md for the required environment values and live verification.

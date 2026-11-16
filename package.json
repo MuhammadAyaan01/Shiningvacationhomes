@@ -7,8 +7,10 @@
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
     "dev": "next dev --webpack --hostname 127.0.0.1 --port 4173",
-    "start": "node scripts/start.mjs",
-    "build:worker": "node scripts/build-worker.mjs"
+    "start": "next start",
+    "build:worker": "node scripts/build-worker.mjs",
+    "preview": "node scripts/start.mjs",
+    "check:release": "node scripts/check-release.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -16,7 +18,7 @@
     "react-dom": "19.3.1"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": "26.x"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.17",

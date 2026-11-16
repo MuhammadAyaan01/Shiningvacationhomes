@@ -53,7 +53,7 @@ export async function handleEnquiry(request,env={},dependencies={}){
  const url=new URL(request.url);
  const origin=request.headers.get('origin'),expected=env.ENQUIRY_ORIGIN||(request.headers.get('host')?`${url.protocol}//${request.headers.get('host')}`:url.origin);
  if(!origin||origin!==expected)return response(403,{message:'This enquiry must be sent from this website.'});
- if(!request.headers.get('content-type')?.startsWith('application/json'))return response(415,{message:'Use JSON.'});
+ if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')return response(415,{message:'Use JSON.'});
  let input;try{input=await readBody(request)}catch(error){return response(error.message==='large'?413:400,{message:'The enquiry could not be read. Please check its size and try again.'})}
  const {data,errors}=validateEnquiry(input,dependencies.today);
  if(Object.keys(errors).length)return response(422,{message:'Please check the highlighted fields.',errors});

@@ -1,15 +1,35 @@
 # Deployment
 
-## Next.js server deployment
+## Vercel
 
-Use a Next.js Node-compatible host with Node 22+. Install with `npm ci`, build with `npm run build`, and run `npm start`. On Vercel use the Next.js preset. Set `NEXT_PUBLIC_SITE_URL` to the final canonical origin before building. Configure `RESEND_API_KEY`, `ENQUIRY_FROM`, `ENQUIRY_TO` and `ENQUIRY_ORIGIN` as secret runtime variables. Test delivery to an approved inbox before launch.
+Import MuhammadAyaan01/Shiningvacationhomes from GitHub. The checked-in configuration selects Next.js, uses Node 26.x, installs from package-lock.json and runs the release configuration check, production build and tests. Keep the output directory at the framework default; do not choose out.
 
-The server supplies the POST endpoint, image optimizer and security headers. Enforce HTTPS at the host. HSTS is emitted; confirm all headers on the final HTTPS domain. The CSP restricts framing, objects, base URLs and form destinations; it is not a complete script-src policy.
+Before deploying, set these production environment variables in Vercel's secret/environment settings:
 
-The in-memory email limiter is best effort per process. Before public promotion add a shared deployment-layer rate limit or bot protection. Confirm retention, recipients and processor terms for the final privacy policy.
+| Variable | Value |
+|---|---|
+| NEXT_PUBLIC_SITE_URL | Final public HTTPS origin used for canonicals and sitemap |
+| ENQUIRY_ORIGIN | Same origin, without a trailing slash |
+| RESEND_API_KEY | Server-only key for the approved delivery account |
+| ENQUIRY_FROM | Sender address on a Resend-verified domain |
+| ENQUIRY_TO | Approved recipient inbox, or comma-separated inboxes |
 
-## Optional Cloudflare deployment
+Do not place secret values in Git, NEXT_PUBLIC variables, screenshots or public logs. Use separate approved test recipients and environment values for preview deployments. The release check validates presence and basic syntax; it cannot prove domain ownership, provider authentication or inbox receipt. It intentionally blocks the hosted build when delivery settings are missing.
 
-The optional `build:worker` adapter encounters an esbuild ancestor-directory permission error in the current Windows environment. Validate its build and runtime on the target platform before deployment. A static export cannot execute the enquiry endpoint; do not deploy `out/` as the working application. The standard Next.js server build is verified.
+After deployment, verify HTTPS and the actual domain, all 14 routes and custom 404, image optimization, canonical/sitemap URLs, keyboard/mobile interactions and delivery to an approved test inbox. Confirm provider acceptance and actual receipt separately. Add the custom domain and make the required DNS change only in the domain owner's account. Enforce a shared endpoint rate limit/bot rule at the hosting layer before promotion; the application email limiter is best effort per process.
 
-Approve production content and verify the final host's access settings before launch.
+The enquiry privacy information is an implementation overview. The business must approve the final responsible entity, retention/processor information, media rights and stay/booking policies. No live inventory or checkout is implemented; enquiries are followed up by the team.
+
+## Node server
+
+Use Node 26.x. Run npm ci, npm run check:release, npm run build, npm test, then npm start. The start command stays in the foreground and respects the host's PORT environment variable (3000 by default). Run it under the host's process supervisor behind HTTPS. npm start does not rebuild, detach or bind only to localhost.
+
+For the local Windows preview on port 4173, use npm run preview or Start-Preview.cmd. For hot reload, use npm run dev. Do not run these simultaneously on the same port.
+
+## Runtime security
+
+The Next.js server emits nosniff, frame protection, referrer/permissions policies, HSTS and a content security policy. Production resources and browser connections are restricted to this origin, with data/blob images permitted. Inline scripts and styles remain allowed for the current Next.js prerendered/hydrated application; this is not a nonce-based script policy. The email service is contacted from the server, never the browser.
+
+## Optional Cloudflare adapter
+
+The optional build:worker target remains unverified in this Windows environment because esbuild cannot resolve its configuration through a restricted ancestor directory. It is not the selected production deployment path. Do not publish the HTML test snapshot as a substitute for the server application.

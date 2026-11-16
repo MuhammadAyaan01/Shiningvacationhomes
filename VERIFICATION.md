@@ -143,3 +143,9 @@ Production build and all 22 automated tests passed. HTTP checks confirm the upda
 The sticky inset now uses half the space remaining between viewport height and the measured sidebar height. This keeps the complete text block vertically centred while scrolling, with a minimum 32px clearance. Native sticky containment still stops the sidebar at the form section's bottom. The existing viewport-fit fallback and normal mobile/tablet scrolling remain. No transform or scroll-follow animation was added.
 
 Verification: production build and all 22 tests passed. Both enquiry pages return HTTP 200 on localhost. Fresh visual scrolling verification remains unavailable.
+
+## Production deployment preparation — 16 November 2026
+
+Separated the foreground production start from the local preview launcher; pinned Node 26.x and added Vercel configuration with an environment check, build and test gate. The release check validates final origins and required sender/delivery settings without printing secrets. Tightened the production resource policy and JSON content-type boundary. Sitemap tests now use the configured canonical origin rather than a hardcoded business domain.
+
+Node 26.13.1 production build, all 25 tests, 14-route production HTTP checks and the dependency audit passed (zero known advisories). The release gate correctly fails for the five absent production environment values. Vercel remains unconnected; no production deployment or real inbox delivery occurred. See PRODUCTION_RELEASE.md and DEPLOYMENT.md for the concrete remaining steps.

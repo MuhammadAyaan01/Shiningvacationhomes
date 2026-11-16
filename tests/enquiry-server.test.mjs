@@ -16,6 +16,7 @@ test('POST boundary rejects other methods, foreign origins, non-JSON and oversiz
  assert.equal((await handleEnquiry(new Request('https://example.com/api/enquiry/'),env)).status,405);
  assert.equal((await handleEnquiry(request(valid,{Origin:'https://other.example'}),env)).status,403);
  assert.equal((await handleEnquiry(request(valid,{'Content-Type':'text/plain'}),env)).status,415);
+ assert.equal((await handleEnquiry(request(valid,{'Content-Type':'application/json-extra'}),env)).status,415);
  assert.equal((await handleEnquiry(request({...valid,message:'x'.repeat(17000)}),env)).status,413);
  assert.equal((await handleEnquiry(request({...valid,guests:'99'}),env,dependencies())).status,422);
 });
