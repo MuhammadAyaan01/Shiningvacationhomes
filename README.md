@@ -8,9 +8,11 @@ Run `npm ci`, `npm run build`, `npm test`, then `npm run preview`. The local pro
 
 ## Enquiries
 
-Copy `.env.example` to `.env.local`. Configure `RESEND_API_KEY`, `ENQUIRY_FROM` (a verified sender) and `ENQUIRY_TO`. Set `ENQUIRY_ORIGIN` to the exact deployed HTTPS origin behind a proxy. Restart after configuration. Never commit secrets.
+Copy `.env.example` to `.env.local`. For Gmail, set `ENQUIRY_PROVIDER=gmail`, `SMTP_USER` to your Google account email, and `SMTP_APP_PASSWORD` to its 16-letter App Password (requires 2-Step Verification). Leave `ENQUIRY_TO` blank to receive enquiries in the same inbox, or set a different recipient. The sender is always the authenticated Google account. Run `npm run check:email` to verify SMTP connection/authentication without sending an email, then restart the server. Set `ENQUIRY_ORIGIN` to the exact deployed HTTPS origin behind a proxy. Never commit secrets.
 
-The form posts JSON to `/api/enquiry/`. Controls stay disabled until hydration; without JavaScript, direct contact details remain available. Server validation, bounded request bodies, same-origin checks, a honeypot, provider idempotency, timeouts and a basic per-process limiter protect the endpoint. A 202 response means the provider accepted delivery, not confirmed inbox receipt or a reservation. Missing configuration returns 503 and explicitly reports that nothing was sent.
+Resend remains optional: set `ENQUIRY_PROVIDER=resend`, `RESEND_API_KEY`, `ENQUIRY_FROM` (a verified sender) and `ENQUIRY_TO`. Existing environments without ENQUIRY_PROVIDER continue to use Resend. Gmail uses TLS on smtp.gmail.com:465 and needs outbound SMTP access from the host. Google can impose sending limits or block sign-ins; this is intended for low-volume enquiries.
+
+The form posts JSON to `/api/enquiry/`. Controls stay disabled until hydration; without JavaScript, direct contact details remain available. Server validation, bounded request bodies, same-origin checks, a honeypot, Resend provider idempotency, per-process Gmail retry deduplication for 15 minutes, timeouts and a basic per-process limiter protect the endpoint. A 202 response means the provider accepted delivery, not confirmed inbox receipt or a reservation. Missing configuration returns 503 and explicitly reports that nothing was sent.
 
 ## Architecture
 

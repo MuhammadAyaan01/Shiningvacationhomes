@@ -10,10 +10,12 @@
     "start": "next start",
     "build:worker": "node scripts/build-worker.mjs",
     "preview": "node scripts/start.mjs",
-    "check:release": "node scripts/check-release.mjs"
+    "check:release": "node scripts/check-release.mjs",
+    "check:email": "node scripts/check-email.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
+    "nodemailer": "10.6.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

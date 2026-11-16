@@ -10,9 +10,14 @@ Before deploying, set these production environment variables in Vercel's secret/
 |---|---|
 | NEXT_PUBLIC_SITE_URL | Final public HTTPS origin used for canonicals and sitemap |
 | ENQUIRY_ORIGIN | Same origin, without a trailing slash |
-| RESEND_API_KEY | Server-only key for the approved delivery account |
-| ENQUIRY_FROM | Sender address on a Resend-verified domain |
-| ENQUIRY_TO | Approved recipient inbox, or comma-separated inboxes |
+| ENQUIRY_PROVIDER | gmail (or resend for the optional alternative) |
+| SMTP_USER | Google account email when using Gmail |
+| SMTP_APP_PASSWORD | Server-only Google App Password when using Gmail |
+| ENQUIRY_TO | Optional for Gmail: blank uses SMTP_USER; otherwise approved recipient inboxes |
+| RESEND_API_KEY | Required only for Resend |
+| ENQUIRY_FROM | Required only for Resend: sender on a verified domain |
+
+Gmail sends from SMTP_USER over TLS on smtp.gmail.com:465. The host must allow outbound SMTP. Enable Google 2-Step Verification and create an App Password. Run npm run check:email to verify authentication without sending a message. SMTP retry deduplication is per-process for 15 minutes; it is not durable or shared between instances, and a timeout can leave delivery uncertain.
 
 Do not place secret values in Git, NEXT_PUBLIC variables, screenshots or public logs. Use separate approved test recipients and environment values for preview deployments. The release check validates presence and basic syntax; it cannot prove domain ownership, provider authentication or inbox receipt. It intentionally blocks the hosted build when delivery settings are missing.
 

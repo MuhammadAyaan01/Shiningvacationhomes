@@ -1,8 +1,12 @@
 import {collections} from './data.mjs';
+import {createHash} from 'node:crypto';
+import {deliveryIssues,deliveryProvider,sendGmailEnquiry} from './enquiry-delivery.mjs';
 
 const emailPattern=/^[^\s@\r\n]+@[^\s@\r\n]+\.[^\s@\r\n]+$/;
 // shortcut: per-process limits reset on restart; use shared host protection before public promotion.
 const limits=new Map();
+// shortcut: SMTP retry deduplication is per process for 15 minutes; use shared storage across server instances.
+const smtpRequests=new Map();
 const response=(status,data,headers={})=>Response.json(data,{status,headers:{'Cache-Control':'no-store',...headers}});
 const todayDubai=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai'}).format(new Date());
 const dateValid=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;
@@ -59,7 +63,15 @@ export async function handleEnquiry(request,env={},dependencies={}){
  if(Object.keys(errors).length)return response(422,{message:'Please check the highlighted fields.',errors});
  const requestId=request.headers.get('idempotency-key')||'';
  if(!/^[a-zA-Z0-9_-]{16,80}$/.test(requestId))return response(400,{message:'Reload the form and try again.'});
- if(!env.RESEND_API_KEY||!env.ENQUIRY_FROM||!env.ENQUIRY_TO)return response(503,{message:'Online enquiries are not configured yet. Please call or email the team. Your enquiry has not been sent.'});
+ if(deliveryIssues(env).length)return response(503,{message:'Online enquiries are not configured yet. Please call or email the team. Your enquiry has not been sent.'});
+ const smtp=deliveryProvider(env)==='gmail',requests=dependencies.smtpRequests||smtpRequests;
+ const requestKey=`${data.email.toLowerCase()}:${requestId}`,fingerprint=createHash('sha256').update(JSON.stringify(data)).digest('hex');
+ if(smtp){
+  for(const [key,value] of requests)if(Date.now()-value.start>900000)requests.delete(key);
+  const previous=requests.get(requestKey);
+  if(previous){if(previous.fingerprint!==fingerprint)return response(409,{message:'This submission has changed. Reload the form and try again.'});return (await previous.result).clone();}
+  if(requests.size>=1000)return response(429,{message:'Please try again later.'},{'Retry-After':'900'});
+ }
  const now=Date.now(),key=data.email.toLowerCase(),store=dependencies.limits||limits;
  for(const [key,value] of store)if(now-value.start>900000)store.delete(key);
  if(store.size>=1000&&!store.has(key))return response(429,{message:'Please try again later.'},{'Retry-After':'900'});
@@ -67,13 +79,23 @@ export async function handleEnquiry(request,env={},dependencies={}){
  if(entry.count>=5)return response(429,{message:'Please wait before sending another enquiry.'},{'Retry-After':'900'});
  entry.count++;store.set(key,entry);
  const text=['Shining Vacation Homes enquiry','',...Object.entries(data).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`),'','An enquiry is not a confirmed reservation.'].join('\n');
- try{
+ const deliver=async()=>{try{
+  const subject=`Shining Vacation Homes - ${data.intent==='owner'?'Property management':data.intent==='monthly'?'Monthly stay':'Stay'} enquiry`;
+  let reference;
+  if(smtp)reference=await sendGmailEnquiry(env,{replyTo:data.email,subject,text,requestId},dependencies.createTransport);
+  else{
   const result=await (dependencies.fetch||fetch)('https://api.resend.com/emails',{
    method:'POST',signal:AbortSignal.timeout(10000),headers:{Authorization:`Bearer ${env.RESEND_API_KEY}`,'Content-Type':'application/json','Idempotency-Key':`enquiry-${requestId}`},
-   body:JSON.stringify({from:env.ENQUIRY_FROM,to:env.ENQUIRY_TO.split(',').map(v=>v.trim()).filter(Boolean),reply_to:data.email,subject:`Shining Vacation Homes — ${data.intent==='owner'?'Property management':data.intent==='monthly'?'Monthly stay':'Stay'} enquiry`,text})
+   body:JSON.stringify({from:env.ENQUIRY_FROM,to:env.ENQUIRY_TO.split(',').map(v=>v.trim()).filter(Boolean),reply_to:data.email,subject,text})
   });
   if(!result.ok)return response(result.status===429?429:502,{message:'The email service could not accept your enquiry. Please retry or contact the team directly.'});
   const receipt=await result.json();if(!receipt.id)throw new Error('No receipt');
-  return response(202,{message:data.intent==='owner'?'Your property enquiry has been submitted. Our team will contact you to discuss the details.':'Your requirements have been submitted. Our team will contact you to discuss suitable available options. No accommodation has been reserved.',reference:receipt.id});
- }catch{return response(502,{message:'Delivery could not be confirmed. Please retry or contact the team directly.'})}
+  reference=receipt.id;
+  }
+  return response(202,{message:data.intent==='owner'?'Your property enquiry has been submitted. Our team will contact you to discuss the details.':'Your requirements have been submitted. Our team will contact you to discuss suitable available options. No accommodation has been reserved.',reference});
+ }catch{return response(502,{message:'Delivery could not be confirmed. Please retry or contact the team directly.'})}};
+ if(!smtp)return deliver();
+ const result=deliver();requests.set(requestKey,{start:Date.now(),fingerprint,result});
+ // Keep ambiguous SMTP failures cached too: retrying immediately could send a duplicate.
+ return (await result).clone();
 }
