@@ -1,2 +1,3 @@
+import Link from 'next/link';
 import {collectionGuidance} from '../src/collection-guidance.mjs';
-export function CollectionGuide({slug}){const item=collectionGuidance[slug];return <section className="collection-guide"><h2>{item.title}</h2><p>{item.intro}</p><ul className="check-list">{item.questions.map(question=><li key={question}>{question}</li>)}</ul></section>}
+export function CollectionGuide({slug}){const item=collectionGuidance[slug];return <section className="collection-guide"><h2>{item.title}</h2><p>{item.intro}</p><ul className="check-list">{item.questions.map(question=><li key={question}>{question}</li>)}</ul><p>Planning a longer visit? <Link className="text-link" href="/monthly-stays/">Plan a monthly stay in Dubai</Link>. You can also <Link className="text-link" href="/stays/">compare other accommodation styles</Link> before sharing your requirements.</p></section>}
