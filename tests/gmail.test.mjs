@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {handleEnquiry} from '../src/enquiry-server.js';
-import {deliveryIssues,sendGmailEnquiry} from '../src/enquiry-delivery.mjs';
+import {deliveryIssues,sendGmailEnquiry,createGmailTransport,gmailConnectionMessage} from '../src/enquiry-delivery.mjs';
 import {releaseIssues} from '../src/release-config.mjs';
 const env={ENQUIRY_PROVIDER:'gmail',SMTP_USER:'sender@gmail.com',SMTP_APP_PASSWORD:'abcd efgh ijkl mnop'};
 const body={intent:'guest',name:'Test Guest',email:'guest@example.com',travelPlan:'One month',message:'Please confirm options.'};
@@ -56,4 +56,23 @@ test('SMTP has a total deadline and closes a stalled connection',async context=>
  const pending=sendGmailEnquiry(env,{replyTo:'guest@example.com',subject:'Test',text:'Test',requestId:'deadline-test-123456'},()=>({sendMail:()=>new Promise(()=>{}),close:()=>{closed=true}}));
  const rejection=assert.rejects(pending,/deadline exceeded/);
  context.mock.timers.tick(20000);await rejection;assert.equal(closed,true);
+});
+
+test('Gmail resolves through the OS while preserving SNI and certificate verification',async()=>{
+ let settings;
+ await createGmailTransport(env,{
+  resolveHost:async(host,options)=>{assert.equal(host,'smtp.gmail.com');assert.equal(options.order,'ipv4first');return [{address:'192.0.2.20',family:4}]},
+  createTransport:options=>{settings=options;return {}}
+ });
+ assert.equal(settings.host,'192.0.2.20');assert.equal(settings.port,465);assert.equal(settings.secure,true);
+ assert.deepEqual(settings.tls,{servername:'smtp.gmail.com',rejectUnauthorized:true});
+});
+
+test('Gmail DNS failures and denied sockets are distinguished from rejected credentials',async()=>{
+ let created=false;
+ await assert.rejects(createGmailTransport(env,{resolveHost:async()=>{throw new Error('DNS unavailable')},createTransport:()=>{created=true}}),error=>error.code==='EDNS');
+ assert.equal(created,false);
+ assert.match(gmailConnectionMessage({code:'ESOCKET',errno:-4092}),/before authentication/);
+ assert.match(gmailConnectionMessage({code:'EAUTH'}),/Google rejected authentication/);
+ assert.doesNotMatch(gmailConnectionMessage({code:'ESOCKET',errno:-4092}),/App Password/);
 });

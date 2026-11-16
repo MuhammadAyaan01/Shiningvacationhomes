@@ -1,3 +1,4 @@
+import {lookup} from 'node:dns/promises';
 const email=/^[^\s@\r\n]+@[^\s@\r\n]+\.[^\s@\r\n]+$/;
 export const deliveryProvider=env=>env.ENQUIRY_PROVIDER||'resend';
 export const deliveryRecipients=env=>(env.ENQUIRY_TO||(deliveryProvider(env)==='gmail'?env.SMTP_USER:'')||'').split(',').map(value=>value.trim()).filter(Boolean);
@@ -20,13 +21,36 @@ export function deliveryIssues(env){
 
 export function gmailTransportOptions(env){
  return {host:'smtp.gmail.com',port:465,secure:true,
+  tls:{servername:'smtp.gmail.com',rejectUnauthorized:true},
   auth:{user:env.SMTP_USER.trim(),pass:env.SMTP_APP_PASSWORD.replace(/\s/g,'')},
   connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,dnsTimeout:10000,
   disableFileAccess:true,disableUrlAccess:true,logger:false,debug:false};
 }
 
+export async function createGmailTransport(env,{resolveHost=lookup,createTransport}={}){
+ const options=gmailTransportOptions(env);
+ let timer;
+ try{
+  // Use the OS resolver; some networks cannot serve Nodemailer's direct DNS queries.
+  const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{const error=new Error('SMTP DNS lookup timed out');error.code='EDNS';reject(error);},5000);});
+  const addresses=await Promise.race([resolveHost(options.host,{all:true,order:'ipv4first'}),timeout]);
+  if(!addresses.length){const error=new Error('SMTP DNS lookup returned no address');error.code='EDNS';throw error;}
+  options.host=addresses[0].address;
+ }catch(error){error.code='EDNS';throw error;}
+ finally{clearTimeout(timer);}
+ // Keep Gmail's hostname for SNI and certificate validation when connecting to the resolved address.
+ return (createTransport||(await import('nodemailer')).default.createTransport)(options);
+}
+
+export function gmailConnectionMessage(error){
+ if(error.code==='EDNS')return 'The system could not resolve smtp.gmail.com before authentication.';
+ if(error.code==='EACCES'||error.errno===-4092||error.cause?.code==='EACCES')return 'This execution environment denied the outgoing SMTP connection (EACCES), before authentication. Run this check in a normal terminal or deployment host that permits SMTP.';
+ if(error.code==='EAUTH')return 'Google rejected authentication. Check the account, App Password and 2-Step Verification.';
+ return 'The SMTP connection could not be verified. Check host network access and Google account settings.';
+}
+
 export async function sendGmailEnquiry(env,message,createTransport){
- const transport=(createTransport||(await import('nodemailer')).default.createTransport)(gmailTransportOptions(env));
+ const transport=createTransport?createTransport(gmailTransportOptions(env)):await createGmailTransport(env);
  let deadline;
  try{
   const sending=transport.sendMail({

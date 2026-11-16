@@ -41,3 +41,7 @@ Website records expire after 30 days. Queries exclude expired records, new captu
 npm run enquiries -- delete REFERENCE removes one website record. Process the corresponding email/backup retention request separately. Do not delete a record merely to force a duplicate email resend.
 
 The privacy page describes this technical behavior. The business must still confirm its responsible legal entity, mailbox retention, staff access and applicable processor/transfer details. No legal compliance certification is asserted.
+
+## Gmail connection diagnosis — 17 November 2026
+
+The OS resolver successfully resolves smtp.gmail.com. Gmail transport now uses that resolver while retaining TLS SNI and certificate validation for smtp.gmail.com; no IP address is hardcoded. Normal authenticated SMTP checks on both ports 465 and 587 were denied with EACCES before login in this execution environment. Credentials have not been rejected or verified. Run npm run check:email from an ordinary user terminal or the deployment host with approved SMTP access. No message is sent by this command. Do not disable TLS or regenerate passwords to address a network access denial.

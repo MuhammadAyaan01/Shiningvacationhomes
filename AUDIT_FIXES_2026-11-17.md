@@ -15,7 +15,7 @@
 ## Verification
 
 - Node 26.13.1 / Next.js production build passed.
-- All 38 automated tests passed, including encrypted record persistence after restart, request conflicts, transactional quota limits, concurrent duplicate requests, email failure recovery, storage failure, expiry/deletion and stalled SMTP connection closure.
+- All 40 automated tests passed, including encrypted record persistence after restart, request conflicts, transactional quota limits, concurrent duplicate requests, email failure recovery, storage failure, expiry/deletion and stalled SMTP connection closure.
 - HTTP checks passed for all 14 routes, 404 behavior, headers, form boundaries, robots, sitemap and actual optimized WebP responses.
 - Direct HTTP access to the private storage path returned 404.
 - Dependency installation audit reported zero known vulnerabilities.
@@ -32,3 +32,7 @@
 - Public HTTPS/domain redirects, Search Console/indexing, legacy URL export, fresh browser/assistive-technology tests and field Core Web Vitals remain unverified. No new numerical score or compliance certification is asserted.
 
 See ENQUIRY_OPERATIONS.md for deployment/recovery instructions. The earlier audit is preserved separately as the baseline.
+
+## Gmail connection diagnosis — 17 November 2026
+
+The OS resolver successfully resolves smtp.gmail.com. Gmail transport now uses that resolver while retaining TLS SNI and certificate validation for smtp.gmail.com; no IP address is hardcoded. Normal authenticated SMTP checks on both ports 465 and 587 were denied with EACCES before login in this execution environment. Credentials have not been rejected or verified. Run npm run check:email from an ordinary user terminal or the deployment host with approved SMTP access. No message is sent by this command. Do not disable TLS or regenerate passwords to address a network access denial.
