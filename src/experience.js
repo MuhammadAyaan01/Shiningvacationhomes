@@ -8,3 +8,7 @@ export function staySummary(arrival,departure,guests){
   else if(departure)dates='Choose your check-in';
   return `${dates} · ${count} guest${count===1?'':'s'}`;
 }
+
+export function backToTopVisible(scrollPosition,footerTop,viewportHeight,viewportWidth){
+  return scrollPosition>550&&(viewportWidth<=1000||footerTop>=viewportHeight);
+}

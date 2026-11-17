@@ -7,7 +7,7 @@ import {usePathname,useSearchParams} from 'next/navigation';
 import {collections,faqs,media} from '../src/data.mjs';
 import {chapters} from '../src/chapter-data.mjs';
 import {CollectionImage} from './collection-image.jsx';
-import {staySummary} from '../src/experience.js';
+import {staySummary,backToTopVisible} from '../src/experience.js';
 
 const SiteContext=createContext(null);
 const keys=['arrival','departure','guests'];
@@ -81,13 +81,13 @@ export function Motion(){
   play(document.querySelector('.hero-visual'),[{clipPath:'inset(0 0 100% 0 round 8px)',transform:'translateY(32px)',opacity:.2},{clipPath:'inset(0 0 0 0 round 8px)',transform:'translateY(0)',opacity:1}],780,40);
   const observer=new IntersectionObserver(entries=>entries.filter(entry=>entry.isIntersecting).forEach((entry,i)=>{enter(entry.target,Math.min(i*90,270));observer.unobserve(entry.target);}),{threshold:.12,rootMargin:'0px 0px -24px 0px'});
   document.querySelectorAll('.section-title,.home-collection>.stay-tile,.collection-row,.slow-grid>*,.steps article,.owner-band>*,.faq-grid>*,.editorial>*,.help-strip,.contact-grid>*,.prose>*,.detail-photo,.detail-copy,.enquiry-panel,.cards>*,.chapter-reveal').forEach(el=>observer.observe(el));
-  const hero=document.querySelector('.hero-visual');let frame=0;
-  const update=()=>{frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight;progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);setBack(previous=>previous===(y>550)?previous:y>550);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);};
+  const hero=document.querySelector('.hero-visual'),footer=document.querySelector('footer');let frame=0;
+  const update=()=>{frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight,showBack=backToTopVisible(y,footer?.getBoundingClientRect().top??Infinity,innerHeight,innerWidth);progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);setBack(previous=>previous===showBack?previous:showBack);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);};
   const scroll=()=>{if(!frame)frame=requestAnimationFrame(update)};
   const look=e=>{if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;const box=hero.getBoundingClientRect();hero?.style.setProperty('--look-x',`${((e.clientX-box.left)/box.width-.5)*14}px`);hero?.style.setProperty('--look-y',`${((e.clientY-box.top)/box.height-.5)*10}px`);};
   const leave=()=>{hero?.style.setProperty('--look-x','0px');hero?.style.setProperty('--look-y','0px')};
-  window.addEventListener('scroll',scroll,{passive:true});hero?.addEventListener('pointermove',look);hero?.addEventListener('pointerleave',leave);update();
-  return()=>{observer.disconnect();animations.forEach(a=>a.cancel());cancelAnimationFrame(frame);window.removeEventListener('scroll',scroll);hero?.removeEventListener('pointermove',look);hero?.removeEventListener('pointerleave',leave);};
+  window.addEventListener('scroll',scroll,{passive:true});window.addEventListener('resize',scroll,{passive:true});hero?.addEventListener('pointermove',look);hero?.addEventListener('pointerleave',leave);update();
+  return()=>{observer.disconnect();animations.forEach(a=>a.cancel());cancelAnimationFrame(frame);window.removeEventListener('scroll',scroll);window.removeEventListener('resize',scroll);hero?.removeEventListener('pointermove',look);hero?.removeEventListener('pointerleave',leave);};
  },[path]);
  return <><div ref={progress} className="reading-progress" aria-hidden="true"/><button className={'back-top'+(back?' is-visible':'')} type="button" aria-hidden={!back} tabIndex={back?0:-1} onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});document.querySelector('.brand')?.focus({preventScroll:true});}}>Back to top ↑</button></>;
 }

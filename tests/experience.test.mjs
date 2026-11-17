@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {staySummary} from '../src/experience.js';
+import {staySummary,backToTopVisible} from '../src/experience.js';
 
 test('gallery keeps fitted photographs and navigation without zoom controls',async()=>{
  const html=await readFile('components/photo-dialog.jsx','utf8');
@@ -22,4 +22,15 @@ test('stay plan calculates nights across year and daylight-saving boundaries wit
  assert.equal(staySummary('2026-12-10','2026-12-10','1'),'Check your dates · 1 guest');
  assert.equal(staySummary('','2026-12-10','999'),'Choose your check-in · 1 guest');
  assert.equal(staySummary('2026-12-10','','2'),'Choose your check-out · 2 guests');
+});
+
+test('desktop back-to-top clears the footer while smaller-screen behavior stays unchanged',()=>{
+ assert.equal(backToTopVisible(550,1000,900,1440),false);
+ assert.equal(backToTopVisible(900,1000,900,1440),true);
+ assert.equal(backToTopVisible(900,900,900,1440),true);
+ assert.equal(backToTopVisible(900,899,900,1440),false);
+ assert.equal(backToTopVisible(900,-200,900,1440),false);
+ assert.equal(backToTopVisible(900,400,900,1000),true);
+ assert.equal(backToTopVisible(900,400,900,390),true);
+ assert.equal(backToTopVisible(900,Infinity,900,1440),true);
 });
