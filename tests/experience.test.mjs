@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {staySummary,backToTopVisible} from '../src/experience.js';
+import {staySummary,backToTopVisible,backToTopLift} from '../src/experience.js';
 
 test('gallery keeps fitted photographs and navigation without zoom controls',async()=>{
  const html=await readFile('components/photo-dialog.jsx','utf8');
@@ -24,13 +24,17 @@ test('stay plan calculates nights across year and daylight-saving boundaries wit
  assert.equal(staySummary('2026-12-10','','2'),'Choose your check-out · 2 guests');
 });
 
-test('desktop back-to-top clears the footer while smaller-screen behavior stays unchanged',()=>{
- assert.equal(backToTopVisible(550,1000,900,1440),false);
- assert.equal(backToTopVisible(900,1000,900,1440),true);
- assert.equal(backToTopVisible(900,900,900,1440),true);
- assert.equal(backToTopVisible(900,899,900,1440),false);
- assert.equal(backToTopVisible(900,-200,900,1440),false);
- assert.equal(backToTopVisible(900,400,900,1000),true);
- assert.equal(backToTopVisible(900,400,900,390),true);
- assert.equal(backToTopVisible(900,Infinity,900,1440),true);
+test('back-to-top stays available at the footer and moves only when its text would overlap',()=>{
+ assert.equal(backToTopVisible(550),false);
+ assert.equal(backToTopVisible(900),true);
+ const button={left:650,right:800,top:728,bottom:776};
+ const tabletLabel={left:700,right:796,top:752,bottom:768};
+ const lift=backToTopLift(button,tabletLabel,728);
+ assert.equal(lift,64);
+ assert.equal(button.bottom-lift,728-16);
+ assert.equal(backToTopLift(button,{left:500,right:600,top:752,bottom:768},728),0);
+ assert.equal(backToTopLift(button,{left:700,right:796,top:920,bottom:936},896),0);
+ assert.equal(backToTopLift(button,{left:700,right:796,top:620,bottom:636},596),0);
+ assert.equal(backToTopLift(button,null,undefined),0);
+ assert.equal(backToTopLift(button,tabletLabel,728),lift);
 });
