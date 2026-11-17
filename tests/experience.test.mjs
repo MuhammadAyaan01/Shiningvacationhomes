@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {staySummary,backToTopVisible,backToTopDocked} from '../src/experience.js';
+import {staySummary} from '../src/experience.js';
 import {routes} from '../src/seo.js';
 
 test('gallery keeps fitted photographs and navigation without zoom controls',async()=>{
@@ -25,26 +25,9 @@ test('stay plan calculates nights across year and daylight-saving boundaries wit
  assert.equal(staySummary('2026-12-10','','2'),'Choose your check-out · 2 guests');
 });
 
-test('back-to-top docks into reserved footer space at the same physical boundary on every screen size',()=>{
- assert.equal(backToTopVisible(550),false);assert.equal(backToTopVisible(900),true);
- for(const height of [320,600,838,1080]){
-  for(const gap of [16,24,34]){
-   assert.equal(backToTopDocked(height-gap-48+1,48,height,gap),false);
-   assert.equal(backToTopDocked(height-gap-48,48,height,gap),true);
-   assert.equal(backToTopDocked(0,48,height,gap),true);
-  }
- }
- assert.equal(backToTopDocked(700,80,838,24),true);
- assert.equal(backToTopDocked(760,80,838,24),false);
-});
-
-test('every content route owns exactly one back-to-top control in a reserved footer row',async()=>{
+test('all content routes omit back-to-top controls and their reserved footer row',async()=>{
  for(const route of routes){
   const html=(await readFile('out'+route+'index.html','utf8')).replace(/<script[\s\S]*?<\/script>/g,'');
-  const footer=html.match(/<footer>([\s\S]*?)<\/footer>/)?.[1];assert.ok(footer,route);
-  assert.equal((html.match(/class="back-top"/g)||[]).length,1,route);
-  assert.equal((footer.match(/class="back-top-dock"/g)||[]).length,1,route);
-  assert.ok(footer.indexOf('class="footer-utility"')<footer.indexOf('class="wrap footer-top"'),route);
-  assert.ok(footer.includes('Back to top'),route);
+  assert.doesNotMatch(html,/Back to top|back-top|footer-utility/,route);
  }
 });
