@@ -7,7 +7,7 @@ import {usePathname,useSearchParams} from 'next/navigation';
 import {collections,faqs,media} from '../src/data.mjs';
 import {chapters} from '../src/chapter-data.mjs';
 import {CollectionImage} from './collection-image.jsx';
-import {staySummary,backToTopVisible,backToTopLift} from '../src/experience.js';
+import {staySummary} from '../src/experience.js';
 
 const SiteContext=createContext(null);
 const keys=['arrival','departure','guests'];
@@ -73,7 +73,7 @@ export function CollectionCard({slug,featured=false}){const p=collections.find(p
 export function AccommodationStyles(){return <><h2 className="visually-hidden">Accommodation styles</h2><div className="cards accommodation-styles" aria-label="Accommodation styles">{collections.map(p=><CollectionCard key={p.slug} slug={p.slug}/>)}</div></>}
 export function Motion(){
  const path=usePathname();
- const progress=useRef(null),backButton=useRef(null),[back,setBack]=useState(false);
+ const progress=useRef(null);
  useEffect(()=>{
   const animations=[];const play=(el,frames,duration=600,delay=0)=>{const a=el?.animate?.(frames,{duration,delay,easing,fill:'backwards'});if(a)animations.push(a);};
   const enter=(el,delay=0)=>play(el,[{opacity:0,transform:'translateY(44px)'},{opacity:1,transform:'translateY(0)'}],600,delay);
@@ -81,24 +81,13 @@ export function Motion(){
   play(document.querySelector('.hero-visual'),[{clipPath:'inset(0 0 100% 0 round 8px)',transform:'translateY(32px)',opacity:.2},{clipPath:'inset(0 0 0 0 round 8px)',transform:'translateY(0)',opacity:1}],780,40);
   const observer=new IntersectionObserver(entries=>entries.filter(entry=>entry.isIntersecting).forEach((entry,i)=>{enter(entry.target,Math.min(i*90,270));observer.unobserve(entry.target);}),{threshold:.12,rootMargin:'0px 0px -24px 0px'});
   document.querySelectorAll('.section-title,.home-collection>.stay-tile,.collection-row,.slow-grid>*,.steps article,.owner-band>*,.faq-grid>*,.editorial>*,.help-strip,.contact-grid>*,.prose>*,.detail-photo,.detail-copy,.enquiry-panel,.cards>*,.chapter-reveal').forEach(el=>observer.observe(el));
-  const hero=document.querySelector('.hero-visual'),footer=document.querySelector('.footer-bottom');let frame=0;
-  const footerLabelRange=footer?.lastElementChild?document.createRange():null;
-  footerLabelRange?.selectNodeContents(footer.lastElementChild);
-  const update=()=>{
-   frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight,showBack=backToTopVisible(y),button=backButton.current;
-   if(button){
-    const rect=button.getBoundingClientRect(),bottom=innerHeight-(parseFloat(getComputedStyle(button).bottom)||0);
-    const base={left:rect.left,right:rect.right,top:bottom-button.offsetHeight,bottom};
-    const lift=backToTopLift(base,footerLabelRange?.getBoundingClientRect(),footer?.getBoundingClientRect().top);
-    button.style.setProperty('--back-top-lift',lift+'px');
-   }
-   progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);setBack(previous=>previous===showBack?previous:showBack);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);
-  };
+  const hero=document.querySelector('.hero-visual');let frame=0;
+  const update=()=>{frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight;progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);};
   const scroll=()=>{if(!frame)frame=requestAnimationFrame(update)};
   const look=e=>{if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;const box=hero.getBoundingClientRect();hero?.style.setProperty('--look-x',`${((e.clientX-box.left)/box.width-.5)*14}px`);hero?.style.setProperty('--look-y',`${((e.clientY-box.top)/box.height-.5)*10}px`);};
   const leave=()=>{hero?.style.setProperty('--look-x','0px');hero?.style.setProperty('--look-y','0px')};
   window.addEventListener('scroll',scroll,{passive:true});window.addEventListener('resize',scroll,{passive:true});hero?.addEventListener('pointermove',look);hero?.addEventListener('pointerleave',leave);update();
   return()=>{observer.disconnect();animations.forEach(a=>a.cancel());cancelAnimationFrame(frame);window.removeEventListener('scroll',scroll);window.removeEventListener('resize',scroll);hero?.removeEventListener('pointermove',look);hero?.removeEventListener('pointerleave',leave);};
  },[path]);
- return <><div ref={progress} className="reading-progress" aria-hidden="true"/><button ref={backButton} className={'back-top'+(back?' is-visible':'')} type="button" aria-hidden={!back} tabIndex={back?0:-1} onClick={()=>{window.scrollTo({top:0,behavior:'smooth'});document.querySelector('.brand')?.focus({preventScroll:true});}}>Back to top ↑</button></>;
+ return <div ref={progress} className="reading-progress" aria-hidden="true"/>;
 }

@@ -13,9 +13,6 @@ export function backToTopVisible(scrollPosition){
   return scrollPosition>550;
 }
 
-export function backToTopLift(button,footerLabel,footerRowTop,gap=16){
-  if(!button||!footerLabel)return 0;
-  if(button.right<=footerLabel.left||button.left>=footerLabel.right)return 0;
-  if(button.bottom+gap<=footerRowTop||button.top>=footerLabel.bottom+gap)return 0;
-  return Math.max(0,button.bottom-footerRowTop+gap);
+export function backToTopDocked(slotTop,buttonHeight,viewportHeight,bottomGap){
+  return slotTop+buttonHeight<=viewportHeight-bottomGap;
 }

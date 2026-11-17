@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {staySummary,backToTopVisible,backToTopLift} from '../src/experience.js';
+import {staySummary,backToTopVisible,backToTopDocked} from '../src/experience.js';
+import {routes} from '../src/seo.js';
 
 test('gallery keeps fitted photographs and navigation without zoom controls',async()=>{
  const html=await readFile('components/photo-dialog.jsx','utf8');
@@ -24,17 +25,26 @@ test('stay plan calculates nights across year and daylight-saving boundaries wit
  assert.equal(staySummary('2026-12-10','','2'),'Choose your check-out · 2 guests');
 });
 
-test('back-to-top stays available at the footer and moves only when its text would overlap',()=>{
- assert.equal(backToTopVisible(550),false);
- assert.equal(backToTopVisible(900),true);
- const button={left:650,right:800,top:728,bottom:776};
- const tabletLabel={left:700,right:796,top:752,bottom:768};
- const lift=backToTopLift(button,tabletLabel,728);
- assert.equal(lift,64);
- assert.equal(button.bottom-lift,728-16);
- assert.equal(backToTopLift(button,{left:500,right:600,top:752,bottom:768},728),0);
- assert.equal(backToTopLift(button,{left:700,right:796,top:920,bottom:936},896),0);
- assert.equal(backToTopLift(button,{left:700,right:796,top:620,bottom:636},596),0);
- assert.equal(backToTopLift(button,null,undefined),0);
- assert.equal(backToTopLift(button,tabletLabel,728),lift);
+test('back-to-top docks into reserved footer space at the same physical boundary on every screen size',()=>{
+ assert.equal(backToTopVisible(550),false);assert.equal(backToTopVisible(900),true);
+ for(const height of [320,600,838,1080]){
+  for(const gap of [16,24,34]){
+   assert.equal(backToTopDocked(height-gap-48+1,48,height,gap),false);
+   assert.equal(backToTopDocked(height-gap-48,48,height,gap),true);
+   assert.equal(backToTopDocked(0,48,height,gap),true);
+  }
+ }
+ assert.equal(backToTopDocked(700,80,838,24),true);
+ assert.equal(backToTopDocked(760,80,838,24),false);
+});
+
+test('every content route owns exactly one back-to-top control in a reserved footer row',async()=>{
+ for(const route of routes){
+  const html=(await readFile('out'+route+'index.html','utf8')).replace(/<script[\s\S]*?<\/script>/g,'');
+  const footer=html.match(/<footer>([\s\S]*?)<\/footer>/)?.[1];assert.ok(footer,route);
+  assert.equal((html.match(/class="back-top"/g)||[]).length,1,route);
+  assert.equal((footer.match(/class="back-top-dock"/g)||[]).length,1,route);
+  assert.ok(footer.indexOf('class="footer-utility"')<footer.indexOf('class="wrap footer-top"'),route);
+  assert.ok(footer.includes('Back to top'),route);
+ }
 });
