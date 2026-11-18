@@ -1,6 +1,6 @@
 export default {
   trailingSlash:true,
-  images:{imageSizes:[128,256,384],deviceSizes:[640,768,1024,1200,1600,2000],formats:['image/webp'],qualities:[75,85],...(process.env.BUILD_TARGET==='worker'?{loader:'custom',loaderFile:'./src/image-loader.js'}:{})},
+  images:{imageSizes:[128,256,384],deviceSizes:[640,768,1024,1200,1600,2000],formats:['image/webp'],qualities:[75,85]},
   poweredByHeader:false,
   async headers(){return [{source:'/(.*)',headers:[
    {key:'X-Content-Type-Options',value:'nosniff'},

@@ -35,9 +35,9 @@ For the local Windows preview on port 4173, use npm run preview or Start-Preview
 
 The Next.js server emits nosniff, frame protection, referrer/permissions policies, HSTS and a content security policy. Production resources and browser connections are restricted to this origin, with data/blob images permitted. Inline scripts and styles remain allowed for the current Next.js prerendered/hydrated application; this is not a nonce-based script policy. The email service is contacted from the server, never the browser.
 
-## Optional Cloudflare adapter
+## Deployment scope
 
-The optional build:worker target remains unverified in this Windows environment because esbuild cannot resolve its configuration through a restricted ancestor directory. It is not the selected production deployment path. Do not publish the HTML test snapshot as a substitute for the server application.
+Vercel and a conventional Node server are supported. Unused Cloudflare adapter tooling was removed during the 18 November 2026 security review. Do not publish the HTML test snapshot as a substitute for the server application.
 
 ## Persistent enquiries
 
