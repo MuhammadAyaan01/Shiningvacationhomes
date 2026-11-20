@@ -1,5 +1,5 @@
 import {lookup} from 'node:dns/promises';
-const email=/^[^\s@\r\n]+@[^\s@\r\n]+\.[^\s@\r\n]+$/;
+import {isEmailAddress} from './email-address.mjs';
 export const deliveryProvider=env=>env.ENQUIRY_PROVIDER||'resend';
 export const deliveryRecipients=env=>(env.ENQUIRY_TO||(deliveryProvider(env)==='gmail'?env.SMTP_USER:'')||'').split(',').map(value=>value.trim()).filter(Boolean);
 
@@ -7,15 +7,15 @@ export function deliveryIssues(env){
  const issues=[],provider=deliveryProvider(env);
  if(!['gmail','resend'].includes(provider))return ['ENQUIRY_PROVIDER must be gmail or resend.'];
  if(provider==='gmail'){
-  if(!email.test(env.SMTP_USER||''))issues.push('SMTP_USER must contain your Google account email.');
+  if(!isEmailAddress(env.SMTP_USER||''))issues.push('SMTP_USER must contain your Google account email.');
   if(!/^[a-zA-Z]{16}$/.test((env.SMTP_APP_PASSWORD||'').replace(/\s/g,'')))issues.push('SMTP_APP_PASSWORD must contain a 16-letter Google App Password.');
  }else{
   for(const key of ['RESEND_API_KEY','ENQUIRY_FROM'])if(!env[key]?.trim())issues.push(`${key} is required.`);
-  if(env.ENQUIRY_FROM){const value=env.ENQUIRY_FROM.trim(),match=value.match(/^[^<>\r\n]+<([^<>]+)>$/);if(!email.test(match?match[1]:value))issues.push('ENQUIRY_FROM must contain a valid verified sender email.');}
+  if(env.ENQUIRY_FROM){const value=env.ENQUIRY_FROM.trim(),match=value.match(/^[^<>\r\n]+<([^<>]+)>$/);if(!isEmailAddress(match?match[1]:value))issues.push('ENQUIRY_FROM must contain a valid verified sender email.');}
  }
  const recipients=deliveryRecipients(env);
  if(!recipients.length&&provider==='resend')issues.push('ENQUIRY_TO is required.');
- if(env.ENQUIRY_TO&&!env.ENQUIRY_TO.split(',').every(value=>email.test(value.trim())))issues.push('ENQUIRY_TO must contain valid recipient emails.');
+ if(env.ENQUIRY_TO&&!env.ENQUIRY_TO.split(',').every(value=>isEmailAddress(value.trim())))issues.push('ENQUIRY_TO must contain valid recipient emails.');
  return issues;
 }
 

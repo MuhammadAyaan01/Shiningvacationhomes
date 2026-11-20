@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {deliveryIssues,deliveryProvider,sendGmailEnquiry} from './enquiry-delivery.mjs';
 import {enquiryEmail} from './enquiry-email.mjs';
 
-const emailPattern=/^[^\s@\r\n]+@[^\s@\r\n]+\.[^\s@\r\n]+$/;
+import {isEmailAddress} from './email-address.mjs';
 // shortcut: per-process limits reset on restart; use shared host protection before public promotion.
 const limits=new Map();
 // shortcut: SMTP retry deduplication is per process for 15 minutes; use shared storage across server instances.
@@ -21,7 +21,7 @@ export function validateEnquiry(input,today=todayDubai()){
  }
  if(!['guest','monthly','owner'].includes(data.intent))errors.intent='Choose an enquiry type.';
  if(!data.name||/[\r\n\u0000-\u001f]/.test(data.name))errors.name='Enter your full name on one line.';
- if(!emailPattern.test(data.email))errors.email='Enter a valid email address.';
+ if(!isEmailAddress(data.email))errors.email='Enter a valid email address.';
  if(data.phone&&!/^[+\d\s().-]{5,40}$/.test(data.phone))errors.phone='Enter a valid telephone number.';
  if(data.companyWebsite)errors.form='Unable to accept this enquiry.';
  if(data.intent==='owner'){
@@ -45,12 +45,21 @@ export function validateEnquiry(input,today=todayDubai()){
  return {data,errors};
 }
 
+const maxBodyBytes=16384;
 async function readBody(request){
  const reader=request.body?.getReader();if(!reader)throw new Error('empty');
- const chunks=[];let size=0;
- while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>16384){await reader.cancel();throw new Error('large')}chunks.push(value)}
- const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length}
- return JSON.parse(new TextDecoder().decode(bytes));
+ let timer;
+ try{
+  return await Promise.race([
+   (async()=>{
+    const chunks=[];let size=0;
+    while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>maxBodyBytes){await reader.cancel();throw new Error('large')}chunks.push(value)}
+    const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length}
+    return JSON.parse(new TextDecoder().decode(bytes));
+   })(),
+   new Promise((_,reject)=>{timer=setTimeout(()=>{reject(new Error('timeout'));reader.cancel().catch(()=>{});},10000);})
+  ]);
+ }finally{clearTimeout(timer);reader.releaseLock();}
 }
 
 export async function readEnquiryRequest(request,env={},dependencies={}){
@@ -59,7 +68,8 @@ export async function readEnquiryRequest(request,env={},dependencies={}){
  const origin=request.headers.get('origin'),expected=env.ENQUIRY_ORIGIN||(request.headers.get('host')?`${url.protocol}//${request.headers.get('host')}`:url.origin);
  if(!origin||origin!==expected)return response(403,{message:'This enquiry must be sent from this website.'});
  if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')return response(415,{message:'Use JSON.'});
- let input;try{input=await readBody(request)}catch(error){return response(error.message==='large'?413:400,{message:'The enquiry could not be read. Please check its size and try again.'})}
+ if(Number(request.headers.get('content-length'))>maxBodyBytes)return response(413,{message:'The enquiry is too large. Please shorten it and try again.'});
+ let input;try{input=await readBody(request)}catch(error){return response(error.message==='timeout'?408:error.message==='large'?413:400,{message:error.message==='timeout'?'The submission took too long. Please try again.':'The enquiry could not be read. Please check its size and try again.'})}
  const {data,errors}=validateEnquiry(input,dependencies.today);
  if(Object.keys(errors).length)return response(422,{message:'Please check the highlighted fields.',errors});
  const requestId=request.headers.get('idempotency-key')||'';

@@ -43,3 +43,10 @@ The live endpoint encrypts and saves validated enquiries before email delivery. 
 Guest, monthly-stay and owner notifications use the shared branded HTML template with inline styles and presentation tables, alongside a plain-text alternative. Form values are escaped in HTML; notes retain line breaks, accommodation names and dates are readable, blank optional rows are omitted, and the Reply action targets the enquirer. Gmail and Resend use the same content. The email reference matches the saved website enquiry reference. No remote fonts, tracking images or external assets are required.
 
 A user-confirmed local Gmail inbox receipt was supplied on 17 November 2026. The revised HTML formatting is covered by composition and escaping tests; a fresh Gmail inbox rendering check still requires a new enquiry after rebuilding/restarting the normal local server.
+
+
+## Browser regression checks
+
+After `npm run build`, run `npm run test:browser`. The suite covers every content route at mobile/tablet/desktop sizes, automated accessibility, breakpoint overflow, navigation/gallery keyboard behavior, form states and the sticky enquiry sidebar. Windows Chrome is used when available; otherwise run `npx playwright install chromium` to install the test browser. Form requests are intercepted and do not send real emails. Keep the browser tests on localhost.
+
+See [the 20 November audit and launch handoff](docs/AUDIT_2026-11-20.md) for verified results and hosting blockers.

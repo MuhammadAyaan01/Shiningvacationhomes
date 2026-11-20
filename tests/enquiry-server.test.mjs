@@ -53,3 +53,17 @@ test('delivery includes flexible requirements and does not promise a reservation
  const result=await handleEnquiry(request(body),env,{...dependencies(),fetch:async(url,init)=>{delivered=JSON.parse(init.body);return Response.json({id:'flexible-receipt'})}});
  assert.equal(result.status,202);assert.match(delivered.text,/Travel plans: About one month/);assert.match(delivered.text,/per month/);assert.match(delivered.text,/Preferred area: Dubai/);assert.match((await result.json()).message,/No accommodation has been reserved/);
 });
+
+
+test('request body deadline releases stalled streams and rejects oversized declared bodies',async context=>{
+ const {readEnquiryRequest}=await import('../src/enquiry-server.js');
+ context.mock.timers.enable({apis:['setTimeout']});
+ let cancelled=false;
+ const stream=new ReadableStream({cancel(){cancelled=true}});
+ const slow=new Request('https://example.com/api/enquiry/',{method:'POST',headers:{Origin:'https://example.com','Content-Type':'application/json'},body:stream,duplex:'half'});
+ const pending=readEnquiryRequest(slow,env);
+ context.mock.timers.tick(10000);
+ const result=await pending;assert.equal(result.status,408);assert.equal(cancelled,true);
+ const tooLarge=request(valid,{'Content-Length':'20000'});
+ assert.equal((await readEnquiryRequest(tooLarge,env)).status,413);
+});
