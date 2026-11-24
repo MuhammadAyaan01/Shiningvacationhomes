@@ -12,7 +12,9 @@
     "check:release": "node scripts/check-release.mjs",
     "check:email": "node scripts/check-email.mjs",
     "enquiries": "node scripts/enquiries.mjs",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "check:live": "node scripts/check-live.mjs",
+    "test:adapter": "node scripts/verify-adapter.mjs"
   },
   "dependencies": {
     "next": "16.4.6",

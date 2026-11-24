@@ -50,3 +50,10 @@ A user-confirmed local Gmail inbox receipt was supplied on 17 November 2026. The
 After `npm run build`, run `npm run test:browser`. The suite covers every content route at mobile/tablet/desktop sizes, automated accessibility, breakpoint overflow, navigation/gallery keyboard behavior, form states and the sticky enquiry sidebar. Windows Chrome is used when available; otherwise run `npx playwright install chromium` to install the test browser. Form requests are intercepted and do not send real emails. Keep the browser tests on localhost.
 
 See [the 20 November audit and launch handoff](docs/AUDIT_2026-11-20.md) for verified results and hosting blockers.
+
+
+## Verified build and public checks
+
+Use npm run build to generate the current HTML test snapshot and hash-based script CSP. Both standalone and Next adapter cache layouts are supported. Do not replace this script with a bare next build deployment command. Run npm run test:adapter for the isolated, credential-free adapter regression, and npm run check:live -- https://your-approved-domain after restoring hosting. The live check is read-only and sends no enquiry.
+
+Collection photographs use the existing local responsive WebP files through Next Image, avoiding request-time conversion. Shared storage also limits repeated Vercel enquiries by a protected network identifier without adding the raw address to the enquiry or email.

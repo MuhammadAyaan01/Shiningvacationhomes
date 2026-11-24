@@ -1,0 +1,11 @@
+{
+  "verifiedAt": "2026-11-24T15:56:36.263Z",
+  "adapterBuild": "passed",
+  "regressionTests": "passed",
+  "deploymentId": "adapter-test-deployment",
+  "legacyHomePresent": false,
+  "contentRoutes": 14,
+  "scriptHashCount": 162,
+  "staticOutputs": 49,
+  "prerenders": 75
+}

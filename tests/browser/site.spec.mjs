@@ -10,9 +10,10 @@ async function open(page,url){await page.goto(url,{waitUntil:'networkidle'});awa
 for(const width of [390,834,1440]){
  for(const route of routes)test(`${width}px content and accessibility ${route}`,async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width,height:900});
+  await page.addInitScript({path:axePath});
   const response=await page.goto(route,{waitUntil:'networkidle'});expect(response.status()).toBe(200);
   for(const section of await page.locator('main > section').all()){await section.scrollIntoViewIfNeeded();}
-  await page.evaluate(()=>scrollTo(0,0));await settle(page);
+  await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));await settle(page);
   await expect(page.locator('h1')).toHaveCount(1);
   expect(await page.title()).toContain('Shining');
   expect(await page.locator('meta[name="description"]').getAttribute('content')).toBeTruthy();
@@ -20,7 +21,6 @@ for(const width of [390,834,1440]){
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   expect(await page.evaluate(()=>[...document.images].filter(im=>im.complete&&im.naturalWidth===0).map(im=>im.src))).toEqual([]);
   expect(await page.evaluate(()=>[...document.querySelectorAll('a[href^="#"]')].map(a=>a.getAttribute('href')).filter(h=>h.length>1&&!document.getElementById(decodeURIComponent(h.slice(1)))))).toEqual([]);
-  await page.addScriptTag({path:axePath});
   const violations=await page.evaluate(async()=>{const result=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));});
   expect(violations).toEqual([]);expect(errors).toEqual([]);
  });
@@ -78,8 +78,68 @@ test('desktop enquiry sidebar stays centered and stops inside its section',async
  await page.setViewportSize({width:1440,height:1000});await open(page,'/contact/');
  const aside=page.locator('.enquiry-sidebar');await expect(aside).toHaveAttribute('data-sticky','');
  const geometry=await page.locator('.contact-grid').evaluate(el=>({top:el.getBoundingClientRect().top+scrollY,height:el.offsetHeight}));
- await page.evaluate(top=>scrollTo(0,top),geometry.top+200);await settle(page);
+ await page.evaluate(top=>scrollTo({top,behavior:'instant'}),geometry.top+200);await settle(page);
  const box=await aside.boundingBox();expect(Math.abs(box.y-Math.max(32,(1000-box.height)/2))).toBeLessThan(3);
- await page.evaluate(top=>scrollTo(0,top),geometry.top+geometry.height-500);await settle(page);
+ await page.evaluate(top=>scrollTo({top,behavior:'instant'}),geometry.top+geometry.height-500);await settle(page);
  const end=await aside.boundingBox(),parent=await page.locator('.contact-grid').boundingBox();expect(end.y+end.height).toBeLessThanOrEqual(parent.y+parent.height+2);
+});
+
+for(const width of [390,834,1440])test(`${width}px privacy contents follows reading position`,async({page})=>{
+ await page.setViewportSize({width,height:900});await open(page,'/privacy-policy/');
+ const active=page.locator('.privacy-nav a[aria-current="location"]');
+ const ids=['information-you-share','services-that-process-enquiries','your-questions-and-requests','how-information-is-used'];
+ for(const id of ids){
+  await page.locator('#'+id).evaluate(el=>scrollTo({top:el.getBoundingClientRect().top+scrollY-100,behavior:'instant'}));
+  await settle(page);await expect(active).toHaveCount(1);await expect(active).toHaveAttribute('href','#'+id);
+ }
+ expect(new URL(page.url()).hash).toBe('');
+ await page.goto('/privacy-policy/#links-and-tracking',{waitUntil:'networkidle'});await settle(page);
+ await expect(active).toHaveAttribute('href','#links-and-tracking');
+ if(width===1440){
+  const link=page.locator('.privacy-nav a[href="#sharing-information-carefully"]');
+  await link.focus();await page.keyboard.press('Enter');
+  await expect(active).toHaveAttribute('href','#sharing-information-carefully');
+ }
+});
+
+test('booking contents tracks sections and keeps its links after navigation',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});await open(page,'/booking-terms/');
+ const active=page.locator('.privacy-nav a[aria-current="location"]');
+ for(const id of ['share-your-plans','complete-quotation','before-you-confirm','review-the-accommodation']){
+  await page.locator('#'+id).evaluate(el=>scrollTo({top:el.getBoundingClientRect().top+scrollY-100,behavior:'instant'}));
+  await settle(page);await expect(active).toHaveCount(1);await expect(active).toHaveAttribute('href','#'+id);
+ }
+ const link=page.locator('.privacy-nav a[href="#arrival-and-stay"]');await link.focus();await page.keyboard.press('Enter');
+ await expect(active).toHaveAttribute('href','#arrival-and-stay');
+ await page.getByRole('link',{name:'Share your requirements',exact:true}).click();await expect(page).toHaveURL(/\/contact\//);await expect(page.locator('h1')).toContainText('Every good stay');await settle(page);
+ await page.goBack({waitUntil:'networkidle'});await expect(page.locator('.privacy-nav a[aria-current="location"]')).toHaveCount(1);
+});
+
+test('untrusted enquiry preferences remain text and never execute markup',async({page})=>{
+ const payload='<img src=x onerror="window.__injected=true">';
+ await page.addInitScript(()=>{window.__injected=false});
+ await open(page,'/contact/?collection='+encodeURIComponent(payload)+'&guests='+encodeURIComponent(payload));
+ expect(await page.evaluate(()=>window.__injected)).toBe(false);
+ await expect(page.locator('[name="collection"]')).toHaveValue('');
+ await expect(page.locator('[name="guests"]')).toHaveValue('');
+ await expect(page.locator('main img[src="x"]')).toHaveCount(0);
+});
+
+test('real preview API accepts its own origin and rejects invalid input before delivery',async({request,baseURL})=>{
+ const response=await request.post('/api/enquiry/',{headers:{Origin:baseURL,'Idempotency-Key':'boundary-browser-test-12345'},data:{}});
+ expect(response.status()).toBe(422);expect(response.headers()['cache-control']).toBe('no-store');
+});
+
+test('strict script CSP permits hydration and blocks unapproved inline scripts',async({page})=>{
+ await page.addInitScript(()=>{window.__cspInjected=false;window.__blocked=[];document.addEventListener('securitypolicyviolation',event=>window.__blocked.push(event.effectiveDirective))});
+ const response=await page.goto('/',{waitUntil:'networkidle'});await settle(page);
+ const policy=response.headers()['content-security-policy'];const scripts=policy.split(';').find(rule=>rule.trim().startsWith('script-src '));
+ expect(scripts).toContain("'sha256-");expect(scripts).not.toContain("'unsafe-inline'");
+ expect(await page.evaluate(()=>window.__blocked)).toEqual([]);
+ const faq=page.locator('.faq-trigger').first();await faq.scrollIntoViewIfNeeded();await faq.click();await expect(faq).toHaveAttribute('aria-expanded','true');
+ expect(await page.locator('.hero-image').getAttribute('src')).toMatch(/^\/media\/1BR-\d+\.webp$/);
+ await page.evaluate(()=>{const script=document.createElement('script');script.textContent='window.__cspInjected=true';document.body.append(script)});
+ await expect.poll(()=>page.evaluate(()=>window.__blocked)).toContain('script-src-elem');
+ expect(await page.evaluate(()=>window.__cspInjected)).toBe(false);
+ await page.locator('footer').getByRole('link',{name:'About',exact:true}).click();await expect(page).toHaveURL(/\/about\//);await expect(page.locator('h1')).toContainText('Every stay starts');
 });

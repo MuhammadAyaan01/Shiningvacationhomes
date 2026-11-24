@@ -46,7 +46,7 @@ export async function createEnquiryStore({directory,databaseUrl,key,retentionDay
  const decrypt=payload=>{const bytes=Buffer.from(payload,'base64'),decipher=createDecipheriv('aes-256-gcm',secret,bytes.subarray(0,12));decipher.setAuthTag(bytes.subarray(12,28));return JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)),decipher.final()]).toString('utf8'))};
  for(const statement of schema)await query(statement);
  return {
-  async capture(data,requestId,now=Date.now()){
+  async capture(data,requestId,now=Date.now(),clientAddress=''){
    const requestKey=hash(data.email.toLowerCase()+':'+requestId),fingerprint=hash(JSON.stringify(data));
    return transaction(async run=>{
     await run('DELETE FROM shining_enquiries WHERE expires_at < ?',[now]);
@@ -55,6 +55,7 @@ export async function createEnquiryStore({directory,databaseUrl,key,retentionDay
     if(previous)return previous.fingerprint===fingerprint?{...previous,existing:true}:{conflict:true};
     const window=Math.floor(now/900000),day=Math.floor(now/86400000);
     const buckets=[['email:'+hash(data.email.toLowerCase())+':'+window,5,(window+1)*900000],['global:'+window,20,(window+1)*900000],['daily:'+day,80,(day+1)*86400000]];
+    if(clientAddress)buckets.push(['network:'+hash(clientAddress)+':'+window,10,(window+1)*900000]);
     for(const [bucket,max] of buckets){const row=(await run('SELECT hits FROM shining_enquiry_limits WHERE bucket = ?',[bucket]))[0];if(row&&row.hits>=max)return {limited:true};}
     for(const [bucket,,expires] of buckets)await run('INSERT INTO shining_enquiry_limits (bucket,hits,expires_at) VALUES (?,1,?) ON CONFLICT (bucket) DO UPDATE SET hits = shining_enquiry_limits.hits + 1',[bucket,expires]);
     const id=randomUUID();

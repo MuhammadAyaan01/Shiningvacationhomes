@@ -1,6 +1,7 @@
 import {handleEnquiry,readEnquiryRequest} from './enquiry-server.js';
 import {deliveryIssues} from './enquiry-delivery.mjs';
 import {getEnquiryStore} from './enquiry-store.mjs';
+import {trustedClientAddress} from './request-identity.mjs';
 
 const reply=(status,message,reference)=>Response.json({message,...(reference?{reference}:{})},{status,headers:{'Cache-Control':'no-store'}});
 export async function handlePersistentEnquiry(request,env,dependencies={}){
@@ -9,9 +10,11 @@ export async function handlePersistentEnquiry(request,env,dependencies={}){
  if(deliveryIssues(env).length)return reply(503,'Online enquiries are not configured yet. Please call or email the team. Your enquiry has not been sent.');
  let store,captured;
  try{
-  const local=['127.0.0.1','localhost','[::1]'].includes(new URL(request.url).hostname);
+  const localHosts=['127.0.0.1','localhost','[::1]'];
+  // A public deployment cannot opt into local storage by presenting a loopback Host.
+  const local=!env.VERCEL&&localHosts.includes(new URL(request.url).hostname)&&(!env.ENQUIRY_ORIGIN||localHosts.includes(new URL(env.ENQUIRY_ORIGIN).hostname));
   store=dependencies.store||await getEnquiryStore(env,local);
-  captured=await store.capture(parsed.data,parsed.requestId);
+  captured=await store.capture(parsed.data,parsed.requestId,Date.now(),trustedClientAddress(request,env));
  }catch{return reply(503,'Your enquiry could not be saved. Please call or email the team. Your enquiry has not been submitted.');}
  if(captured.conflict)return reply(409,'This submission has changed. Please reload the form and try again.');
  if(captured.limited)return reply(429,'Please wait before sending another enquiry, or contact the team directly.');

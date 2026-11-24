@@ -67,3 +67,26 @@ test('request body deadline releases stalled streams and rejects oversized decla
  const tooLarge=request(valid,{'Content-Length':'20000'});
  assert.equal((await readEnquiryRequest(tooLarge,env)).status,413);
 });
+
+
+test('public origins fail closed and untrusted Host or fetch metadata cannot bypass checks',async()=>{
+ const {readEnquiryRequest}=await import('../src/enquiry-server.js');
+ const hostile=request(valid,{Origin:'https://attacker.example',Host:'attacker.example'});
+ assert.equal((await readEnquiryRequest(hostile,env)).status,403);
+ assert.equal((await readEnquiryRequest(request(valid,{'Sec-Fetch-Site':'cross-site'}),env)).status,403);
+ assert.equal((await readEnquiryRequest(request(),{...env,NODE_ENV:'production'})).status,503);
+ assert.equal((await readEnquiryRequest(request(),{...env,VERCEL:'1'})).status,503);
+ assert.ok((await readEnquiryRequest(request(),{...env,NODE_ENV:'production',ENQUIRY_ORIGIN:'https://example.com'})).data);
+ const local=new Request('http://localhost/api/enquiry/',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json','Idempotency-Key':'local-boundary-test-12345'},body:JSON.stringify(valid)});
+ assert.ok((await readEnquiryRequest(local,{...env,NODE_ENV:'production'})).data);
+ const cloudLocal=new Request('http://localhost/api/enquiry/',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify(valid)});
+ assert.equal((await readEnquiryRequest(cloudLocal,{...env,VERCEL:'1'})).status,503);
+});
+
+test('local preview accepts loopback aliases on the same port without trusting Host',async()=>{
+ const {readEnquiryRequest}=await import('../src/enquiry-server.js');
+ const alias=origin=>new Request('http://localhost:4173/api/enquiry/',{method:'POST',headers:{Origin:origin,Host:'attacker.example','Content-Type':'application/json','Idempotency-Key':'loopback-alias-test-12345'},body:JSON.stringify(valid)});
+ assert.ok((await readEnquiryRequest(alias('http://127.0.0.1:4173'),{...env,NODE_ENV:'production'})).data);
+ for(const origin of ['https://attacker.example','http://127.0.0.1:4174','https://127.0.0.1:4173','http://127.0.0.1:4173/path'])assert.equal((await readEnquiryRequest(alias(origin),env)).status,403);
+ assert.equal((await readEnquiryRequest(alias('http://127.0.0.1:4173'),{...env,ENQUIRY_ORIGIN:'https://public.example'})).status,403);
+});

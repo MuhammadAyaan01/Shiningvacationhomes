@@ -1,0 +1,215 @@
+{
+  "reviewDate": "2026-11-24",
+  "scope": "Local production build and authenticated Vercel read-only inspection",
+  "build": "passed",
+  "unitTests": {
+    "passed": 51,
+    "failed": 0
+  },
+  "browserTests": {
+    "startTime": "2026-11-24T15:37:59.949Z",
+    "duration": 93994.333,
+    "expected": 68,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "httpChecks": {
+    "checks": [
+      {
+        "url": "/",
+        "status": 200,
+        "expected": 200
+      },
+      {
+        "url": "/contact/",
+        "status": 200,
+        "expected": 200
+      },
+      {
+        "url": "/privacy-policy/",
+        "status": 200,
+        "expected": 200
+      },
+      {
+        "url": "/booking-terms/",
+        "status": 200,
+        "expected": 200
+      },
+      {
+        "url": "/robots.txt",
+        "status": 200,
+        "expected": 200
+      },
+      {
+        "url": "/sitemap.xml",
+        "status": 200,
+        "expected": 200
+      },
+      {
+        "url": "/missing-audit-route/",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/.env.local",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/.env",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/.data/enquiries/enquiries.sqlite",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/.git/config",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/package.json",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/src/enquiry-server.js",
+        "status": 404,
+        "expected": 404
+      },
+      {
+        "url": "/api/enquiry/",
+        "status": 405,
+        "expected": 405
+      },
+      {
+        "url": "/_next/image?url=https%3A%2F%2Fexample.com%2Fimage.jpg&w=640&q=85",
+        "status": 400,
+        "expected": 400
+      },
+      {
+        "url": "POST /api/enquiry/ foreign-origin",
+        "status": 403,
+        "expected": 403,
+        "cache": "no-store"
+      },
+      {
+        "url": "POST /api/enquiry/ missing-origin",
+        "status": 403,
+        "expected": 403,
+        "cache": "no-store"
+      },
+      {
+        "url": "POST /api/enquiry/ cross-site",
+        "status": 403,
+        "expected": 403,
+        "cache": "no-store"
+      },
+      {
+        "url": "POST /api/enquiry/ non-json",
+        "status": 415,
+        "expected": 415,
+        "cache": "no-store"
+      },
+      {
+        "url": "POST /api/enquiry/ malformed-json",
+        "status": 400,
+        "expected": 400,
+        "cache": "no-store"
+      },
+      {
+        "url": "POST /api/enquiry/ invalid-fields",
+        "status": 422,
+        "expected": 422,
+        "cache": "no-store"
+      },
+      {
+        "url": "POST /api/enquiry/ oversized",
+        "status": 413,
+        "expected": 413,
+        "cache": "no-store"
+      }
+    ],
+    "failed": []
+  },
+  "dependencyAudit": {
+    "knownVulnerabilities": 0,
+    "outdatedPackages": 0
+  },
+  "runtime": "Node 26.13.1",
+  "secretScan": {
+    "trackedFiles": 183,
+    "clientAssets": 45,
+    "localGitCommits": 50,
+    "configuredPrivateValueMatches": 0,
+    "commonTokenPatternMatches": 0,
+    "limitations": "Matches against configured private values and selected patterns; not a proof that every historical credential is absent."
+  },
+  "performance": {
+    "conditions": "Localhost, cold cache, 150ms latency, 1.6Mbps down, CPU 4x; concurrent browser suite; single samples, not field CWV",
+    "results": [
+      {
+        "width": 390,
+        "route": "/",
+        "lcpMs": 3116,
+        "cls": 0.0002,
+        "ttfbMs": 150,
+        "transferredKiB": 298,
+        "longTasks": 8,
+        "longestTaskMs": 1238,
+        "scriptKiB": 148
+      },
+      {
+        "width": 390,
+        "route": "/contact/",
+        "lcpMs": 1796,
+        "cls": 0.0005,
+        "ttfbMs": 150,
+        "transferredKiB": 243,
+        "longTasks": 3,
+        "longestTaskMs": 1195,
+        "scriptKiB": 148
+      },
+      {
+        "width": 1440,
+        "route": "/",
+        "lcpMs": 3184,
+        "cls": 0.0001,
+        "ttfbMs": 150,
+        "transferredKiB": 403,
+        "longTasks": 9,
+        "longestTaskMs": 615,
+        "scriptKiB": 148
+      },
+      {
+        "width": 1440,
+        "route": "/contact/",
+        "lcpMs": 1192,
+        "cls": 0.0006,
+        "ttfbMs": 150,
+        "transferredKiB": 271,
+        "longTasks": 5,
+        "longestTaskMs": 510,
+        "scriptKiB": 149
+      }
+    ]
+  },
+  "hosting": {
+    "publicUrl": "https://shiningvacationhomes.vercel.app/",
+    "status": 402,
+    "error": "DEPLOYMENT_DISABLED",
+    "latestDeploymentState": "ERROR",
+    "latestDeploymentUTC": "2026-11-18T15:05:03.158Z",
+    "environmentKeysPresent": 8,
+    "environmentValuesDecrypted": false,
+    "customFirewallConfigured": false,
+    "deploymentProtectionScope": "all_except_custom_domains"
+  },
+  "smtpCheck": "EACCES before authentication; no email sent",
+  "changesPushed": false,
+  "changesDeployed": false
+}

@@ -75,19 +75,40 @@ export function Motion(){
  const path=usePathname();
  const progress=useRef(null);
  useEffect(()=>{
-  const animations=[];const play=(el,frames,duration=600,delay=0)=>{const a=el?.animate?.(frames,{duration,delay,easing,fill:'backwards'});if(a)animations.push(a);};
-  const enter=(el,delay=0)=>play(el,[{opacity:0,transform:'translateY(44px)'},{opacity:1,transform:'translateY(0)'}],600,delay);
+  const animations=[];const play=(el,frames,duration=720,delay=0)=>{const a=el?.animate?.(frames,{duration,delay,easing,fill:'backwards'});if(a)animations.push(a);};
+  const enter=(el,delay=0)=>play(el,[{opacity:0,transform:'translateY(32px)'},{opacity:1,transform:'translateY(0)'}],720,delay);
   document.querySelectorAll('.hero-copy>*:not(h1),.page-intro>*:not(h1),.detail-heading>*:not(h1):not(.breadcrumb)').forEach((el,i)=>enter(el,Math.min(i*110,440)));
   play(document.querySelector('.hero-visual'),[{clipPath:'inset(0 0 100% 0 round 8px)',transform:'translateY(32px)',opacity:.2},{clipPath:'inset(0 0 0 0 round 8px)',transform:'translateY(0)',opacity:1}],780,40);
-  const observer=new IntersectionObserver(entries=>entries.filter(entry=>entry.isIntersecting).forEach((entry,i)=>{enter(entry.target,Math.min(i*90,270));observer.unobserve(entry.target);}),{threshold:.12,rootMargin:'0px 0px -24px 0px'});
+  const observer=new IntersectionObserver(entries=>entries.filter(entry=>entry.isIntersecting).forEach((entry,i)=>{enter(entry.target,Math.min(i*90,270));observer.unobserve(entry.target);}),{threshold:.04,rootMargin:'0px 0px 40px 0px'});
   document.querySelectorAll('.section-title,.home-collection>.stay-tile,.collection-row,.slow-grid>*,.steps article,.owner-band>*,.faq-grid>*,.editorial>*,.help-strip,.contact-grid>*,.prose>*,.detail-photo,.detail-copy,.enquiry-panel,.cards>*,.chapter-reveal').forEach(el=>observer.observe(el));
-  const hero=document.querySelector('.hero-visual');let frame=0;
-  const update=()=>{frame=0;const y=scrollY,range=document.documentElement.scrollHeight-innerHeight;progress.current?.style.setProperty('transform',`scaleX(${range>0?Math.min(y/range,1):0})`);hero?.style.setProperty('--hero-drift',`${Math.min(y*.1,42)}px`);};
-  const scroll=()=>{if(!frame)frame=requestAnimationFrame(update)};
-  const look=e=>{if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;const box=hero.getBoundingClientRect();hero?.style.setProperty('--look-x',`${((e.clientX-box.left)/box.width-.5)*14}px`);hero?.style.setProperty('--look-y',`${((e.clientY-box.top)/box.height-.5)*10}px`);};
-  const leave=()=>{hero?.style.setProperty('--look-x','0px');hero?.style.setProperty('--look-y','0px')};
-  window.addEventListener('scroll',scroll,{passive:true});window.addEventListener('resize',scroll,{passive:true});hero?.addEventListener('pointermove',look);hero?.addEventListener('pointerleave',leave);update();
-  return()=>{observer.disconnect();animations.forEach(a=>a.cancel());cancelAnimationFrame(frame);window.removeEventListener('scroll',scroll);window.removeEventListener('resize',scroll);hero?.removeEventListener('pointermove',look);hero?.removeEventListener('pointerleave',leave);};
+  const hero=document.querySelector('.hero-visual'),finePointer=matchMedia('(hover:hover) and (pointer:fine)');
+  let frame=0,lastTime=0,range=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+  const pointer={x:0,y:0,active:false},current={x:0,y:0,drift:0};
+  const schedule=()=>{if(!frame)frame=requestAnimationFrame(update);};
+  const update=time=>{
+   frame=0;
+   const y=scrollY;
+   // Read geometry before writing transforms; one frame loop owns the hero movement.
+   const box=pointer.active&&hero?hero.getBoundingClientRect():null;
+   const clamp=value=>Math.max(0,Math.min(1,value));
+   const target={x:box?(clamp((pointer.x-box.left)/box.width)-.5)*14:0,y:box?(clamp((pointer.y-box.top)/box.height)-.5)*10:0,drift:Math.min(Math.max(y,0)*.1,42)};
+   const delta=lastTime?Math.min(time-lastTime,64):16.7,blend=1-Math.exp(-delta/100);
+   let moving=false;
+   if(hero){
+    for(const key of ['x','y','drift']){const difference=target[key]-current[key];current[key]=Math.abs(difference)<.03?target[key]:current[key]+difference*blend;if(Math.abs(target[key]-current[key])>=.03)moving=true;}
+    hero.style.setProperty('--look-x',`${current.x.toFixed(3)}px`);
+    hero.style.setProperty('--look-y',`${current.y.toFixed(3)}px`);
+    hero.style.setProperty('--hero-drift',`${current.drift.toFixed(3)}px`);
+   }
+   progress.current?.style.setProperty('transform',`scaleX(${range>0?clamp(y/range):0})`);
+   lastTime=moving?time:0;if(moving)schedule();
+  };
+  const resize=()=>{range=Math.max(0,document.documentElement.scrollHeight-innerHeight);schedule();};
+  const look=event=>{if(!finePointer.matches)return;pointer.x=event.clientX;pointer.y=event.clientY;pointer.active=true;schedule();};
+  const leave=()=>{pointer.active=false;schedule();};
+  const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(document.body);
+  window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',resize,{passive:true});hero?.addEventListener('pointermove',look,{passive:true});hero?.addEventListener('pointerleave',leave);schedule();
+  return()=>{observer.disconnect();sizeObserver.disconnect();animations.forEach(a=>a.cancel());cancelAnimationFrame(frame);window.removeEventListener('scroll',schedule);window.removeEventListener('resize',resize);hero?.removeEventListener('pointermove',look);hero?.removeEventListener('pointerleave',leave);};
  },[path]);
  return <div ref={progress} className="reading-progress" aria-hidden="true"/>;
 }

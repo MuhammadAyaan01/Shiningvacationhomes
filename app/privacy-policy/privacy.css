@@ -1,0 +1,90 @@
+/* Editorial privacy information; every rule is scoped to this page. */
+.privacy-hero{display:grid;grid-template-columns:1.05fr 1fr;gap:80px;align-items:end;padding-top:64px;padding-bottom:48px}
+.privacy-hero .eyebrow{margin-bottom:24px}
+.privacy-hero h1{font-size:clamp(44px,4.6vw,66px);line-height:1.06;letter-spacing:-.055em;margin-bottom:0}
+.privacy-hero-copy .lead{font-size:17px;line-height:1.8;max-width:490px;margin-bottom:24px}
+.privacy-updated{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--muted);margin:0}
+.privacy-updated time{color:var(--ink)}
+.privacy-overview{padding-bottom:0}
+.privacy-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.privacy-overview-grid>div{padding:28px 28px 28px 0;min-width:0}
+.privacy-overview-grid>div+div{border-left:1px solid var(--line);padding-left:28px}
+.privacy-overview-label{display:block;color:var(--blue);font-size:11px;line-height:1.6;font-weight:500;letter-spacing:.1em;margin-bottom:12px}
+.privacy-overview-grid h3{font-size:23px;line-height:1.25;letter-spacing:-.035em;margin-bottom:10px}
+.privacy-overview-grid p{font-size:14px;line-height:1.8;color:var(--muted);max-width:320px;margin:0}
+.privacy-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:88px;align-items:start;padding-top:64px;padding-bottom:64px}
+.privacy-rail{position:sticky;top:32px;max-height:calc(100svh - 64px);overflow-y:auto;scrollbar-width:thin;padding-bottom:4px}
+.privacy-nav .eyebrow{font-size:11px;margin:0 0 16px}
+.privacy-nav ol{list-style:none;padding:0;margin:0}
+.privacy-nav li{border-top:1px solid var(--line)}
+.privacy-nav li:last-child{border-bottom:1px solid var(--line)}
+.privacy-nav a{display:flex;align-items:baseline;gap:14px;min-height:48px;padding:13px 4px;font-size:13px;line-height:1.6;color:var(--muted)}
+.privacy-nav a>span{font-size:10px;color:var(--blue);flex:none;font-variant-numeric:tabular-nums}
+.privacy-nav a:hover,.privacy-nav a:focus-visible{color:var(--blue)}
+.privacy-rail-note{margin:28px 0 0;font-size:13px;line-height:1.9;color:var(--muted)}
+.privacy-inline-link{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;overflow-wrap:anywhere;color:var(--ink)}
+.privacy-rail-note a{display:inline-block;margin-top:4px;min-height:32px}
+.privacy-content.prose{max-width:none;min-width:0;padding:0}
+.privacy-section{scroll-margin-top:32px;padding:0 0 32px;border-bottom:1px solid var(--line)}
+.privacy-section+.privacy-section{padding-top:32px}
+.privacy-section:last-child{padding-bottom:0;border-bottom:0}
+.privacy-section-heading{display:grid;grid-template-columns:28px minmax(0,1fr);gap:16px;align-items:baseline;margin-bottom:18px}
+.privacy-section-number{font-size:12px;color:var(--blue);font-variant-numeric:tabular-nums;line-height:1.8}
+.privacy-content.prose h2{font-size:30px;line-height:1.2;letter-spacing:-.035em;margin:0}
+.privacy-section-copy{padding-left:44px}
+.privacy-content.prose p{font-size:16px;line-height:1.85;color:var(--muted);margin:0 0 18px}
+.privacy-content.prose p:last-child{margin-bottom:0}
+.privacy-contact{padding-bottom:64px}
+.privacy-contact-inner{display:flex;align-items:center;justify-content:space-between;gap:48px;background:#eaece8;border:1px solid #d8ded8;border-radius:8px;padding:40px 44px}
+.privacy-contact .eyebrow{font-size:11px;color:var(--muted);margin-bottom:16px}
+.privacy-contact h2{font-size:38px;margin-bottom:16px}
+.privacy-contact p:not(.eyebrow){color:var(--muted);font-size:15px;margin-bottom:0}
+.privacy-contact-actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px;flex-shrink:0}
+.privacy-contact-actions .button{min-width:240px}
+.privacy-contact-actions .text-link{font-size:13px}
+@media(max-width:1000px){
+ .privacy-hero{gap:40px;grid-template-columns:1fr 1fr}
+ .privacy-layout{grid-template-columns:minmax(0,1fr);gap:40px;padding-top:40px}
+ .privacy-rail{position:static;max-height:none;overflow:visible}
+ .privacy-nav ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+ .privacy-nav li:last-child{border-bottom:0}
+ .privacy-nav a{min-height:48px;padding-left:0}
+ .privacy-rail-note{border-top:1px solid var(--line);padding-top:16px;margin-top:0}
+ .privacy-rail-note br{display:none}
+ .privacy-rail-note a{margin:0 0 0 6px}
+ .privacy-section-copy{padding-left:44px}
+ .privacy-contact-inner{padding:32px;gap:32px}
+ .privacy-contact h2{font-size:32px}
+}
+@media(max-width:600px){
+ .privacy-hero{grid-template-columns:minmax(0,1fr);gap:24px;padding-top:36px;padding-bottom:32px}
+ .privacy-hero h1{font-size:44px}
+ .privacy-hero-copy .lead{font-size:16px;margin-bottom:20px}
+ .privacy-updated{gap:12px;flex-wrap:wrap}
+ .privacy-overview-grid{grid-template-columns:minmax(0,1fr)}
+ .privacy-overview-grid>div,.privacy-overview-grid>div+div{padding:22px 0;border-left:0}
+ .privacy-overview-grid>div+div{border-top:1px solid var(--line)}
+ .privacy-overview-label{margin-bottom:8px}
+ .privacy-overview-grid h3{font-size:23px}
+ .privacy-overview-grid p{max-width:none;font-size:15px}
+ .privacy-layout{padding-top:32px;padding-bottom:40px;gap:32px}
+ .privacy-nav ol{grid-template-columns:minmax(0,1fr);gap:0}
+ .privacy-nav a{font-size:14px;padding:12px 0;gap:16px}
+ .privacy-section{padding-bottom:28px}
+ .privacy-section+.privacy-section{padding-top:28px}
+ .privacy-section-heading{grid-template-columns:22px minmax(0,1fr);gap:10px;margin-bottom:16px}
+ .privacy-content.prose h2{font-size:27px}
+ .privacy-section-copy{padding-left:0}
+ .privacy-content.prose p{font-size:16px;line-height:1.8}
+ .privacy-contact{padding-bottom:40px}
+ .privacy-contact-inner{flex-direction:column;align-items:stretch;padding:28px 24px;gap:24px}
+ .privacy-contact h2{font-size:32px}
+ .privacy-contact-actions{align-items:stretch;min-width:0}
+ .privacy-contact-actions .button{min-width:0;gap:16px}
+}
+
+/* Reading position is shown without changing the contents list's geometry. */
+.privacy-nav a{position:relative;padding-left:12px;padding-right:12px;font-weight:500;border-radius:4px;transition:color 200ms ease,background-color 240ms ease}
+.privacy-nav a::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:2px;background:var(--blue);border-radius:2px;opacity:0;transition:opacity 200ms ease}
+.privacy-nav a[aria-current="location"]{color:var(--blue);background:#e9edf8}
+.privacy-nav a[aria-current="location"]::before{opacity:1}

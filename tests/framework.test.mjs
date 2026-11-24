@@ -10,5 +10,5 @@ test('production pages include real Next.js React hydration bundles and no legac
  assert.doesNotMatch(html,/\/assets\/app.js/);
  const scripts=[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m=>m[1]);
  assert.ok(scripts.length>0);
- for(const src of scripts)await assert.doesNotReject(readFile('out'+src));
+ for(const src of scripts)await assert.doesNotReject(readFile('out'+new URL(src,'https://snapshot.invalid').pathname));
 });

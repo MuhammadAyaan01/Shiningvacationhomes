@@ -65,8 +65,14 @@ async function readBody(request){
 export async function readEnquiryRequest(request,env={},dependencies={}){
  if(request.method!=='POST')return response(405,{message:'Use POST.'},{Allow:'POST'});
  const url=new URL(request.url);
- const origin=request.headers.get('origin'),expected=env.ENQUIRY_ORIGIN||(request.headers.get('host')?`${url.protocol}//${request.headers.get('host')}`:url.origin);
- if(!origin||origin!==expected)return response(403,{message:'This enquiry must be sent from this website.'});
+ const local=['localhost','127.0.0.1','[::1]'].includes(url.hostname);
+ // Public runtimes must use an explicit origin; never derive trust from a Host header.
+ if((env.VERCEL||env.NODE_ENV==='production')&&!env.ENQUIRY_ORIGIN&&(!local||env.VERCEL))return response(503,{message:'Online enquiries are not configured yet. Please call or email the team. Your enquiry has not been sent.'});
+ const origin=request.headers.get('origin'),expected=env.ENQUIRY_ORIGIN||url.origin;
+ // Next's local Request URL can use localhost even when the browser uses 127.0.0.1.
+ let localOrigin=false;
+ if(local&&!env.VERCEL&&!env.ENQUIRY_ORIGIN&&origin){try{const source=new URL(origin);localOrigin=['localhost','127.0.0.1','[::1]'].includes(source.hostname)&&source.protocol===url.protocol&&source.port===url.port&&source.origin===origin;}catch{}}
+ if(!origin||(origin!==expected&&!localOrigin)||request.headers.get('sec-fetch-site')==='cross-site')return response(403,{message:'This enquiry must be sent from this website.'});
  if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')return response(415,{message:'Use JSON.'});
  if(Number(request.headers.get('content-length'))>maxBodyBytes)return response(413,{message:'The enquiry is too large. Please shorten it and try again.'});
  let input;try{input=await readBody(request)}catch(error){return response(error.message==='timeout'?408:error.message==='large'?413:400,{message:error.message==='timeout'?'The submission took too long. Please try again.':'The enquiry could not be read. Please check its size and try again.'})}

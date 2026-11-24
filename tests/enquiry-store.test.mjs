@@ -61,3 +61,20 @@ test('expired records are unavailable and individual privacy deletions leave oth
  const first=await store.capture(data,'active-request-123456'),second=await store.capture({...data,email:'another@example.com'},'second-request-123456');
  await store.remove(first.id);assert.equal(await store.read(first.id),null);assert.ok(await store.read(second.id));
 }));
+
+
+test('a loopback request cannot enable local storage on Vercel',async()=>{
+ let called=false;
+ const result=await handlePersistentEnquiry(request(),{...env,VERCEL:'1',ENQUIRY_ORIGIN:'http://localhost'},{createTransport:()=>{called=true}});
+ assert.equal(result.status,503);assert.equal(called,false);
+ assert.match((await result.json()).message,/not been submitted/);
+});
+
+
+test('network quotas block rotating emails without retaining a raw network address',async()=>fixture(async(store,directory)=>{
+ const ip='203.0.113.19';
+ for(let i=0;i<10;i++)assert.ok((await store.capture({...data,email:`guest${i}@example.com`},`network-request-${i}`,Date.now(),ip)).id);
+ assert.equal((await store.capture({...data,email:'rotated@example.com'},'network-request-limit',Date.now(),ip)).limited,true);
+ assert.ok((await store.capture({...data,email:'other@example.com'},'other-network-request',Date.now(),'203.0.113.20')).id);
+ for(const file of ['enquiries.sqlite','enquiries.sqlite-wal']){let bytes;try{bytes=await readFile(path.join(directory,file))}catch{continue}assert.ok(!bytes.includes(Buffer.from(ip)));}
+}));
