@@ -1,4 +1,4 @@
-import {mkdtemp,cp,writeFile,readFile,readdir,symlink,stat,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,cp,writeFile,readFile,readdir,symlink,stat,rm} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import path from 'node:path';
@@ -26,7 +26,8 @@ try{
  const legacyHome=await stat(path.join(fixture,'.next/server/app/index.html')).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error});
  if(legacyHome)throw Error('Adapter test did not exercise the alternate layout');
  const verification={verifiedAt:new Date().toISOString(),adapterBuild:'passed',regressionTests:'passed',deploymentId:'adapter-test-deployment',legacyHomePresent:legacyHome,contentRoutes:14,scriptHashCount:security.hashes.length,...proof};
- await writeFile(path.join(root,'docs/ADAPTER_VERIFICATION_2026-11-24.json'),JSON.stringify(verification,null,2)+'\n');
+ await mkdir(path.join(root,'test-results'),{recursive:true});
+ await writeFile(path.join(root,'test-results/adapter-verification.json'),JSON.stringify(verification,null,2)+'\n');
  console.log('PASS: real Next adapter build, alternate route-cache layout and all 14 required snapshot routes.');
 }finally{
  const temp=path.resolve(os.tmpdir()),resolved=path.resolve(fixture);

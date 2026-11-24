@@ -1,59 +1,71 @@
 # Shining Vacation Homes
 
-Next.js App Router and React with shared CSS and the approved warm editorial design. Node.js 26.x is the verified production target.
+A Next.js App Router and React website for Dubai accommodation and property-management enquiries. The site showcases accommodation styles; the team follows up with actual available options. It has no live inventory, checkout or instant reservations.
 
-## Run locally
+## Requirements
 
-Run `npm ci`, `npm run build`, `npm test`, then `npm run preview`. The local production preview runs at http://127.0.0.1:4173/. For hot reload, use `npm run dev` instead. Stop another server on that port first.
+- Node.js 26.x
+- npm and the committed package-lock.json
+- Gmail SMTP or Resend for enquiry notifications
+- PostgreSQL for public Vercel hosting
 
-## Enquiries
+## Local setup
 
-Copy `.env.example` to `.env.local`. For Gmail, set `ENQUIRY_PROVIDER=gmail`, `SMTP_USER` to your Google account email, and `SMTP_APP_PASSWORD` to its 16-letter App Password (requires 2-Step Verification). Leave `ENQUIRY_TO` blank to receive enquiries in the same inbox, or set a different recipient. The sender is always the authenticated Google account. Run `npm run check:email` to verify SMTP connection/authentication without sending an email, then restart the server. Set `ENQUIRY_ORIGIN` to the exact deployed HTTPS origin behind a proxy. Never commit secrets.
+Copy `.env.example` to `.env.local` and configure your private delivery settings. Keep environment files and enquiry records out of Git.
 
-Resend remains optional: set `ENQUIRY_PROVIDER=resend`, `RESEND_API_KEY`, `ENQUIRY_FROM` (a verified sender) and `ENQUIRY_TO`. Existing environments without ENQUIRY_PROVIDER continue to use Resend. Gmail uses TLS on smtp.gmail.com:465 and needs outbound SMTP access from the host. Google can impose sending limits or block sign-ins; this is intended for low-volume enquiries.
+```sh
+npm ci
+npm run build
+npm test
+npm run preview
+```
 
-The form posts JSON to `/api/enquiry/`. Controls stay disabled until hydration; without JavaScript, direct contact details remain available. Server validation, bounded request bodies, same-origin checks, a honeypot, Resend provider idempotency, per-process Gmail retry deduplication for 15 minutes, timeouts and a basic per-process limiter protect the endpoint. A 202 response means the enquiry was durably captured; its message distinguishes confirmed provider acceptance from unconfirmed email delivery. It never means inbox receipt or a reservation. Missing configuration returns 503 and explicitly reports that nothing was sent.
+The local preview runs at http://127.0.0.1:4173/. For hot reload, use `npm run dev`. Run only one server on that port.
 
-## Architecture
+## Production configuration
 
-Content routes are prerendered; enquiry delivery runs on the server. Internal navigation uses Next Link. Collection images use Next Image, responsive sizes and local source photographs. Fonts are served locally with their licenses. Full motion starts automatically without a toggle. The gallery has no zoom.
+Set these values directly in the Vercel project's Production environment settings:
 
-`out/` is a generated HTML test snapshot, not a deployable backend. See DEPLOYMENT.md.
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | Approved public HTTPS origin for metadata and sitemap |
+| `ENQUIRY_ORIGIN` | The same origin, without a trailing slash |
+| `ENQUIRY_PROVIDER` | `gmail` for the current Gmail setup |
+| `SMTP_USER` | Sending Google account |
+| `SMTP_APP_PASSWORD` | That account's Google App Password |
+| `ENQUIRY_TO` | Recipient inbox; optional for Gmail, which otherwise uses SMTP_USER |
+| `ENQUIRY_DATABASE_URL` | Managed PostgreSQL connection URL |
+| `ENQUIRY_DATA_KEY` | Stable private 64-character hexadecimal encryption key |
 
-## Remaining launch inputs
+The release check intentionally blocks production when required settings are absent. Without `ENQUIRY_PROVIDER=gmail`, the supported legacy default checks for Resend settings instead. For Resend, use the alternative variables documented in `.env.example`.
 
-Accommodation photographs are illustrative. Actual options and prices are discussed after enquiry. Media rights, final policies, the delivery account and applicable provider/confirmation terms need owner verification. No live booking or payment is implemented.
+The build command is `npm run check:release && npm run build && npm test`. Keep Vercel's output directory at its Next.js default. Do not deploy `out/` as a standalone application.
 
-Audit scores require fresh deployed measurements. Source fixes alone do not establish WCAG certification, field Core Web Vitals, inbox delivery or legal compliance.
+## Checks and operations
 
-## Accommodation enquiries
+| Command | Purpose |
+|---|---|
+| `npm test` | Unit and integration regressions after building |
+| `npm run test:browser` | Responsive, accessibility, security and interaction checks in Chromium |
+| `npm run test:adapter` | Secret-free real adapter-mode build and regression checks |
+| `npm run check:email` | Gmail connection/authentication check; sends no message |
+| `npm run check:release` | Validate production delivery, origin and storage settings |
+| `npm run check:live -- https://your-domain` | Read-only public HTTP checks; sends no enquiry |
+| `npm run enquiries -- list` | Review saved enquiry references and delivery states |
 
-This website showcases accommodation Shining can help arrange; it does not publish live inventory. Visitors share requirements and the team follows up with suitable available options. The homepage and contact page use the same protected POST form. Exact dates are optional when an approximate travel plan or duration is supplied. Guests may add accommodation, area and AED budget preferences. Owner enquiries are separate. Configure delivery and complete an approved inbox test before public launch.
+The browser suite uses Windows Chrome when available. Otherwise install Chromium with `npx playwright install chromium`. Generated browser and adapter reports stay in ignored `test-results/`.
 
-## Production commands
+## Architecture and security
 
-Use `npm run check:release` to validate the deployment origin and delivery settings. `npm start` runs the Next.js server in the foreground using the host PORT (default 3000). `npm run preview` is the separate local background preview on port 4173. Vercel configuration runs the release check, build and tests before a deployment can succeed. See DEPLOYMENT.md for the required environment values and live verification.
+Content pages are prerendered. Internal routing uses Next Link. Next Image serves local responsive WebP photographs; fonts are local. The requested full motion remains enabled and the photo viewer has no zoom.
 
-## Persistent enquiries
+Always use `npm run build`: it verifies standalone/adapter prerender outputs and generates the script-hash CSP. The protected JSON POST endpoint validates and encrypts enquiries before email delivery. Shared quotas and idempotency checks limit repeated submissions. A saved reference or provider acceptance does not establish inbox receipt or a reservation.
 
-The live endpoint encrypts and saves validated enquiries before email delivery. Localhost uses private SQLite storage; Vercel requires managed PostgreSQL via ENQUIRY_DATABASE_URL and a stable ENQUIRY_DATA_KEY (64 hex characters). A Node server can instead use an absolute persistent ENQUIRY_STORAGE_DIR. The release gate checks these requirements. Shared database transactions enforce per-email and overall sending budgets. See ENQUIRY_OPERATIONS.md for recovery, expiry, privacy deletion and required operator monitoring. No live database credentials or encryption keys belong in Git or public source archives.
+`out/` is a generated test snapshot, `.next/` is the build output, and `.data/` contains private local enquiry storage. These directories are excluded from Git. Client confirmation of media rights, privacy arrangements and booking conditions remains necessary before launch.
 
-## Enquiry email format
+## Documentation
 
-Guest, monthly-stay and owner notifications use the shared branded HTML template with inline styles and presentation tables, alongside a plain-text alternative. Form values are escaped in HTML; notes retain line breaks, accommodation names and dates are readable, blank optional rows are omitted, and the Reply action targets the enquirer. Gmail and Resend use the same content. The email reference matches the saved website enquiry reference. No remote fonts, tracking images or external assets are required.
-
-A user-confirmed local Gmail inbox receipt was supplied on 17 November 2026. The revised HTML formatting is covered by composition and escaping tests; a fresh Gmail inbox rendering check still requires a new enquiry after rebuilding/restarting the normal local server.
-
-
-## Browser regression checks
-
-After `npm run build`, run `npm run test:browser`. The suite covers every content route at mobile/tablet/desktop sizes, automated accessibility, breakpoint overflow, navigation/gallery keyboard behavior, form states and the sticky enquiry sidebar. Windows Chrome is used when available; otherwise run `npx playwright install chromium` to install the test browser. Form requests are intercepted and do not send real emails. Keep the browser tests on localhost.
-
-See [the 20 November audit and launch handoff](docs/AUDIT_2026-11-20.md) for verified results and hosting blockers.
-
-
-## Verified build and public checks
-
-Use npm run build to generate the current HTML test snapshot and hash-based script CSP. Both standalone and Next adapter cache layouts are supported. Do not replace this script with a bare next build deployment command. Run npm run test:adapter for the isolated, credential-free adapter regression, and npm run check:live -- https://your-approved-domain after restoring hosting. The live check is read-only and sends no enquiry.
-
-Collection photographs use the existing local responsive WebP files through Next Image, avoiding request-time conversion. Shared storage also limits repeated Vercel enquiries by a protected network identifier without adding the raw address to the enquiry or email.
+- [Deployment and production verification](DEPLOYMENT.md)
+- [Enquiry delivery, recovery and retention](ENQUIRY_OPERATIONS.md)
+- [Photograph provenance](MEDIA_SOURCES.md)
+- [SEO configuration and launch checks](SEO.md)
